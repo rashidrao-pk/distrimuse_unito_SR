@@ -216,7 +216,6 @@ pixi run python scripts/pixi_flow.py \
 
 ```
 
-
 ```bash
 # upload masks
 scp -P 10022 "/Users/rashid/Mask Generation_PRight_MASK.png" \
