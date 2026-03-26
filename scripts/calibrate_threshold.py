@@ -729,8 +729,8 @@ def parse_args():
                    help="Area to calibrate. 'ALL' processes all areas.")
 
     # ── Model / dataset ───────────────────────────────────────────────────
-    p.add_argument("--dataset_version",  default="V6")
-    p.add_argument("--dataset_type",     default="fronttop")
+    p.add_argument("--dataset_version",  default="v2")
+    p.add_argument("--dataset_type",     default="refined")
     p.add_argument("--mask_image_name",  default=3015, type=int)
     p.add_argument("--latent_dims",      default=64,   type=int)
     p.add_argument("--exp_type",         default="E3")
@@ -742,14 +742,14 @@ def parse_args():
     p.add_argument("--save_figures", action="store_true", default=False,
                    help="Save per-frame detection PNG figures.")
     # ── Test-mode inputs ──────────────────────────────────────────────────
-    p.add_argument("--test_folder", default=r'V6/fronttop/test_processed/unexpected_person',
+    p.add_argument("--test_folder", default=r'v2/ camera1_20251210_151444_fallen_operator/test/operator_fall',
                    help="[test mode] Root of labelled test ImageFolder.\n"
                         "May contain per-area sub-dirs or be a flat folder.")
     p.add_argument("--checkpoints",
-                   default="scripts/dm_checkpoints/checkpoints_32", 
+                   default="scripts/dm_checkpoints/checkpoints_33", 
                    choices=["scripts/dm_checkpoints/checkpoints_32", 
                             "scripts/dm_checkpoints/checkpoints_33"])
-    p.add_argument("--gt_csv",   default="scripts/data/annotations/anom_metadata_unexpected_person.csv",
+    p.add_argument("--gt_csv",   default="scripts/data/annotations/anom_metadata_operator_fall.csv",
                    help="[test mode] Ground-truth CSV with columns:\n"
                         "  frame_no, component, component_anomaly\n"
                         "  (component_anomaly ∈ {ANOMALOUS, NORMAL})")

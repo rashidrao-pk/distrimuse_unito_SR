@@ -315,7 +315,7 @@ def train(
 
         batch_iterator = (
             tqdm(train_loader, desc="Training Batches", position=1, leave=False)
-            if verbose_level == 2 else train_loader
+            if verbose_level == 1 else train_loader
         )
 
         for real_images, _ in batch_iterator:
