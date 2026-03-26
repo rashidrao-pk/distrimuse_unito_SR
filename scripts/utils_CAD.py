@@ -312,7 +312,7 @@ def create_video_from_frames(paths,suffix=None,data_type = 'full',video_for='tra
     del folder_path,output_video,img,fourcc,first_image,height, width,save_path,allowed_images,image
 ##################################################################################
 ##################################################################################
-def get_paths(paths, verbose=False):
+def get_paths(paths,dataset_type='SR', verbose=False):
     import platform
     platform_node = platform.node()
     print(f'system -- OS({os.name}) - user({platform_node})', )
@@ -323,20 +323,20 @@ def get_paths(paths, verbose=False):
         platform_node = platform.node()
         if platform_node=='Rashid-Unito':
             paths.path_results = 'E:/Cloud/RashidPHD/Codes/DistriMuSe/AD_CAD_v3'
-            paths.path_datasets_main        = r'D:/DS/VeleriaLab/'
-            paths.path_results_local        = r'E:/PHD/datacloud_data/repos/AD_CAD_v3'
+            paths.path_datasets_main        = rf'D:/DS/{dataset_type}/'
+            paths.path_results_local        = rf'E:/PHD/datacloud_data/repos/AD_CAD_v3'
         elif platform_node=='DESKTOP-Q14PULG':
             paths.path_results = r'C:/rashid/RashidPHD/Codes/DistriMuSe/AD_CAD_v3'
-            paths.path_datasets_main         = r'C:/DS/ValeriaLab'
+            paths.path_datasets_main         = r'C:/DS/'
             paths.path_results_local        = r'C:/rashid_data/codes/DistriMuSe'
     elif os.name=='posix':
         if 'epito' in platform_node:
             paths.path_results        = '/beegfs/home/mrashid/repos/AD_CAD_v3'
-            paths.path_datasets_main  = '/beegfs/home/mrashid/datasets/ValeriaLab'
+            paths.path_datasets_main  = f'/beegfs/home/mrashid/datasets/{dataset_type}'
             paths.path_results_local  = '/beegfs/home/mrashid/repos/AD_CAD_v3'
         if 'distrimuse' in platform_node:
             paths.path_results        = os.getcwd()
-            paths.path_datasets_main  = '/home/unito/data/DS/ValeriaLab'
+            paths.path_datasets_main  = f'/home/unito/data/DS/{dataset_type}'
             paths.path_results_local  = '/home/unito/data/'
 
     if verbose:

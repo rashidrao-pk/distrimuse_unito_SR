@@ -9,8 +9,6 @@
 An anomaly detection pipeline based on variational autoencoder models that monitors industrial safety areas in real time. The system processes video input, trains per-area models, calibrates detection thresholds, and runs inference on live or recorded footage.
 
 
-
-
 ## 1. Setup
 
 Connect to remote device
@@ -88,6 +86,10 @@ unzip masks.zip -d /home/unito/advis/DS/SR/v2
 
 unzip camera1_20251210_150045_box_fall.zip -d /home/unito/advis/DS/SR/v2
 unzip camera1_20251210_151444_fallen_operator.zip -d /home/unito/advis/DS/SR/v2
+
+rm camera1_20251210_150045_box_fall.zip
+rm camera1_20251210_151444_fallen_operator.zip
+
 ```
 
 **Dataset V3**
@@ -275,26 +277,16 @@ conda install pytorch torchvision torchaudio pytorch-cuda=11.8 -c pytorch -c nvi
 ### 1.2 Clone GitHub Repo
 
 ```bash
-git clone https://github.com/rashidrao-pk/distrimuse_unito
+git clone https://github.com/rashidrao-pk/distrimuse_unito_SR
 conda activate dm_unito
 pip install -r requirments.txt
 ```
 
-### 1.3 Retreive Model Checkpoints (Demo 3.2 & Demo 3.3)
+### 1.3 Retreive Model Checkpoints (Demo 3.3)
 Model Checkpoints are seperately provided and are available at following GitLab repo
--   [https://GitLab.di.unito.it/rashid/**_`dm_checkpoints_demo32`_**](https://gitlab.di.unito.it/rashid/dm_checkpoints_demo32)
+
 -   [https://GitLab.di.unito.it/rashid/**_`dm_checkpoints_demo33`_**](https://gitlab.di.unito.it/rashid/dm_checkpoints_demo33)
 
-#### Demo 3.2
-
-Download model checkpoints uploaded on following `GitLab` repo for `Synthetic Palletizing` dataset (dataset provided by `Valeria-Lab, University of Granada`, Spain for `DEMO-3.2` of UC3):
-
-```bash
-cd distrimuse_unito/scripts
-git clone https://gitlab.di.unito.it/rashid/dm_checkpoints_demo32 origin-url   # FOR Simulated ROBOT Palletizing - DEMO 3.2
-cd ..
-```
-or
 
 #### Demo 3.3
 
@@ -305,7 +297,6 @@ git clone https://gitlab.di.unito.it/rashid/dm_checkpoints_demo33 origin-url # F
 cd ..
 ```
 
----
 ---
 
 ## 2. Train
@@ -324,7 +315,7 @@ python scripts/train.py --safety_area ALL
 
 ```bash
 # All areas with custom settings
-python scripts/train.py --safety_area ALL --epochs 1000 --batch_size 64
+python scripts/train.py --safety_area ALL --epochs 200 --batch_size 64
 ```
 
 **Full argument reference**
