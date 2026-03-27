@@ -232,7 +232,7 @@ ls /home/unito/advis/DS/SR/v2/train_processed/back_view/masked_input -l . | egre
 ls /home/unito/advis/DS/SR/v2/train_processed/back_view/ConvBelt -l . | egrep -c '^-'
 ls /home/unito/advis/DS/SR/v2/train_processed/back_view/ConvBelt -l . | egrep -c '^-'
 ls /home/unito/advis/DS/SR/v2/train_processed/back_view/ConvBelt -l . | egrep -c '^-'
-
+```
 
 
 ## Pipeline Overview
@@ -240,6 +240,7 @@ ls /home/unito/advis/DS/SR/v2/train_processed/back_view/ConvBelt -l . | egrep -c
 ```
 Raw Video → Preprocessing → Training → Threshold Calibration → Inference
 ```
+
 
 | Stage | Script | Description |
 |---|---|---|

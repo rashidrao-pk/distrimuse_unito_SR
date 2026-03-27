@@ -313,10 +313,7 @@ def train(
         }
         dis_preds, dis_labels = [], []
 
-        batch_iterator = (
-            tqdm(train_loader, desc="Training Batches", position=1, leave=False)
-            if verbose_level == 1 else train_loader
-        )
+        batch_iterator = tqdm(train_loader, desc="Training Batches", position=1, leave=False)
 
         for real_images, _ in batch_iterator:
             batch_size      = real_images.size(0)
@@ -470,7 +467,7 @@ def parse_args():
     p.add_argument("--force_rebuild_split", action="store_true", help="Force rebuild the train/val split JSON")
     p.add_argument("--model_override",      action="store_true", help="Rename existing checkpoint before training")
     p.add_argument("--model_save_interval", default=10,     type=int)
-    p.add_argument("--verbose_level",       default=0,      type=int, choices=[0, 1, 2])
+    p.add_argument("--verbose_level",       default=1,      type=int, choices=[0, 1, 2])
     p.add_argument("--save_path_type",      default="cloud", choices=["cloud", "local"])
     p.add_argument("--checkpoints",
                    default="scripts/dm_checkpoints/checkpoints_32", 
@@ -507,11 +504,11 @@ def train_one_safety_area(safety_area: str, args, device):
         dataset_type     = args.dataset_type,
         mask_image_name  = args.mask_image_name,
         subgroup         = safety_area,
-        verbose          = True and args.verbose_level > 0,
+        verbose          = True and args.verbose_level > 1,
     )
 
     params = utc.get_parameters_by_experiment(params, verbose=True and args.verbose_level > 0)
-    _ = utc.get_header(params, paths, verbose=True and args.verbose_level > 0)
+    _ = utc.get_header(params, paths, verbose=True and args.verbose_level > 1)
 
     # ── Output dirs ───────────────────────────────────────────────────────
     paths.path_codes_cloud   = paths.path_codes
@@ -539,7 +536,7 @@ def train_one_safety_area(safety_area: str, args, device):
         params.subgroup, params, args,paths,
         save_path_type = args.save_path_type,
         dir            = 'scripts/results',
-        verbose        = True  and args.verbose_level > 0,
+        verbose        = True  and args.verbose_level > 1,
     )
     paths.suffix = suffix
     # ── Data split ────────────────────────────────────────────────────────
@@ -553,7 +550,7 @@ def train_one_safety_area(safety_area: str, args, device):
         val_every        = args.val_every,
         val_offset       = args.val_offset,
         force_rebuild    = args.force_rebuild_split,
-        verbose          = True  and args.verbose_level > 0,
+        verbose          = True  and args.verbose_level > 1,
     )
 
     train_loader, val_loader, train_dataset, val_dataset, split_info = \
@@ -569,7 +566,7 @@ def train_one_safety_area(safety_area: str, args, device):
             num_workers       = args.num_workers,
             pin_memory        = False,
             persistent_workers= False,
-            verbose           = True and args.verbose_level > 0,
+            verbose           = True and args.verbose_level > 1,
         )
 
     paths.train_classes     = {idx: cls for cls, idx in train_dataset.class_to_idx.items()}
@@ -609,7 +606,6 @@ def train_one_safety_area(safety_area: str, args, device):
 
     utc.get_header(params, paths, verbose=True and args.verbose_level > 0)
     
-
     # ── Training ─────────────────────────────────────────────────────────
     loss_history, log_messages = train(
         train_loader            = train_loader,

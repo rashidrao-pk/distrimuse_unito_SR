@@ -314,8 +314,8 @@ def create_video_from_frames(paths,suffix=None,data_type = 'full',video_for='tra
 ##################################################################################
 def get_paths(paths,dataset_type='SR', verbose=False):
     import platform
-    platform_node = platform.node()
-    print(f'system -- OS({os.name}) - user({platform_node})', )
+    platform_node = platform.node()       
+        
     if os.name=='nt':
         # from matplotlib import rc
         # rc('text',usetex=True)
@@ -340,10 +340,8 @@ def get_paths(paths,dataset_type='SR', verbose=False):
             paths.path_results_local  = '/home/unito/advis/'
 
     if verbose:
-        print('OS type:', os.name)
-        print(f'Code Running === {platform.node()} :: Windows')
-        print(f'path_results :  {paths.path_results}')
-        print(f'path_datasets_main : {paths.path_datasets_main}')
+        print(f'system -- OS({os.name}) - user({platform_node})')
+        print('-'*50)
     return paths
 
 #################################################################################################
