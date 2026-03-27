@@ -76,8 +76,8 @@ from PIL import Image
 from tqdm import tqdm
 
 import utils as ut
-import scripts.utils_model as utmc
-from scripts.utils_model import Encoder, Decoder, Discriminator
+import utils_model as utmc
+from utils_model import Encoder, Decoder, Discriminator
 
 # ---------------------------------------------------------------------------
 # Stop flag

@@ -29,8 +29,8 @@ from tqdm import tqdm
 from sklearn.metrics import accuracy_score, f1_score
 
 import utils as ut
-import scripts.utils_model as utmc
-from scripts.utils_model import Encoder, Decoder, Discriminator
+import utils_model as utmc
+from utils_model import Encoder, Decoder, Discriminator
 
 # ---------------------------------------------------------------------------
 # Global stop flag — replaces the ipywidgets checkbox
