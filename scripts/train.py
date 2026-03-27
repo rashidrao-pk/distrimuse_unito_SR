@@ -467,7 +467,7 @@ def parse_args():
     p.add_argument("--force_rebuild_split", action="store_true", help="Force rebuild the train/val split JSON")
     p.add_argument("--model_override",      action="store_true", help="Rename existing checkpoint before training")
     p.add_argument("--model_save_interval", default=10,     type=int)
-    p.add_argument("--verbose_level",       default=1,      type=int, choices=[0, 1, 2])
+    p.add_argument("--verbose_level",       default=0,      type=int, choices=[0, 1, 2])
     p.add_argument("--save_path_type",      default="cloud", choices=["cloud", "local"])
     p.add_argument("--checkpoints",
                    default="scripts/dm_checkpoints/checkpoints_32", 
@@ -604,7 +604,7 @@ def train_one_safety_area(safety_area: str, args, device):
     if args.verbose_level >= 0:
         print(f"Epochs already trained: {len(loss_history)}")
 
-    utc.get_header(params, paths, verbose=True and args.verbose_level > 0)
+    _ = utc.get_header(params, paths, verbose=True and args.verbose_level > 1)
     
     # ── Training ─────────────────────────────────────────────────────────
     loss_history, log_messages = train(
