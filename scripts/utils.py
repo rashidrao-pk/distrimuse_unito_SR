@@ -43,7 +43,7 @@ from sklearn.decomposition import IncrementalPCA, PCA
 from sklearn.manifold import TSNE
 
 # Local
-import scripts.utils_model as utmC
+import utils_model as utmC
 
 # Globals
 global device
