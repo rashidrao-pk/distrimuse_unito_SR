@@ -28,9 +28,9 @@ from PIL import Image
 from tqdm import tqdm
 from sklearn.metrics import accuracy_score, f1_score
 
-import utils_CAD as utc
-import utils_model_CAD as utmc
-from utils_model_CAD import Encoder, Decoder, Discriminator
+import utils as ut
+import scripts.utils_model as utmc
+from scripts.utils_model import Encoder, Decoder, Discriminator
 
 # ---------------------------------------------------------------------------
 # Global stop flag — replaces the ipywidgets checkbox
@@ -274,7 +274,7 @@ def train(
     beta_gan = params.beta_gan
 
     start_time  = datetime.now()
-    log_messages = utc.create_log_file(params, paths, start_time, verbose=True and args.verbose_level > 0)
+    log_messages = ut.create_log_file(params, paths, start_time, verbose=True and args.verbose_level > 0)
 
     iterator = tqdm(
         range(params.epochs),
@@ -389,8 +389,8 @@ def train(
 
         # ── Visualisation / monitoring ───────────────────────────────────────
         if save_figures:
-            colormap_anomaly_map = utc.get_colormap()  # noqa: F841
-            utc.plot_images(
+            colormap_anomaly_map = ut.get_colormap()  # noqa: F841
+            ut.plot_images(
                 real_images, reconstructed_images, len(loss_history), paths,
                 plot_anomaly_scores=True, save_fig=True, interval=5, destroy_fig=True,
             )
@@ -399,7 +399,7 @@ def train(
                 recon_train_fx = utmc.get_reconstructed(Enc, Dec, data_train_fx, device=device)
                 z_random       = torch.randn((params.batch_size, params.latent_dims), device=device)
                 fake_images    = Dec(z_random)
-                utc.plot_images_tracking(
+                ut.plot_images_tracking(
                     real_images, reconstructed_images,
                     data_train_fx, recon_train_fx,
                     torch.zeros_like(data_train_fx), fake_images,
@@ -410,7 +410,7 @@ def train(
                 )
 
         # ── Periodic checkpoint ──────────────────────────────────────────────
-        if (iter_num + 1) % model_save_interval == 0:
+        if (iter_num==0) or ((iter_num + 1) % model_save_interval == 0):
             # utmc.save_model(Enc, Dec, Dis, optEncDec, optDis, paths, loss_history, suffix)
             utmc.save_model(Enc=Enc,Dec=Dec,D=Dis,
                     optEncDec=optEncDec,
@@ -456,8 +456,8 @@ def train(
 
         # ── Loss curves — always saved to results/training ───────────────────
         
-        utc.plot_loss_sep(loss_history, params, paths)
-        # utc.plot_losses(loss_history, params, paths)
+        ut.plot_loss_sep(loss_history, params, paths)
+        # ut.plot_losses(loss_history, params, paths)
 
     return loss_history,log_messages
 
@@ -482,7 +482,7 @@ def parse_args():
     p.add_argument("--epochs",              default=200,   type=int)
     p.add_argument("--batch_size",          default=16,     type=int)
     p.add_argument("--latent_dims",         default=64,     type=int)
-    p.add_argument("--exp_type",            default="E3", help="Experiment type key for utc.get_parameters_by_experiment")
+    p.add_argument("--exp_type",            default="E3", help="Experiment type key for ut.get_parameters_by_experiment")
     p.add_argument("--augmentation_type",   default="custom", choices=["min", "custom"])
     p.add_argument("--num_workers",         default=0,      type=int)
     p.add_argument("--pin_memory",          default=False,  type=bool)
@@ -513,16 +513,16 @@ def train_one_safety_area(safety_area: str, args, device):
     print(f"{'='*100}")
 
     # ── Params / Paths ────────────────────────────────────────────────────
-    params, paths = utc.get_params_paths()
-    paths         = utc.get_paths(paths, verbose=False)
+    params, paths = ut.get_params_paths()
+    paths         = ut.get_paths(paths, verbose=False)
 
-    params.subgroup      = safety_area          # utc internals still use .subgroup
+    params.subgroup      = safety_area          # ut internals still use .subgroup
     params.epochs        = args.epochs
     params.batch_size    = args.batch_size
     params.latent_dims   = args.latent_dims
     params.exp_type      = args.exp_type
 
-    paths, params = utc.get_dataset_version(
+    paths, params = ut.get_dataset_version(
         paths, params,
         dataset_version  = args.dataset_version,
         dataset_type     = args.dataset_cam_type,
@@ -531,8 +531,8 @@ def train_one_safety_area(safety_area: str, args, device):
         verbose          = True and args.verbose_level > 1,
     )
 
-    params = utc.get_parameters_by_experiment(params, verbose=True and args.verbose_level > 0)
-    _ = utc.get_header(params, paths, verbose=True and args.verbose_level > 1)
+    params = ut.get_parameters_by_experiment(params, verbose=True and args.verbose_level > 0)
+    _ = ut.get_header(params, paths, verbose=True and args.verbose_level > 1)
 
     # ── Output dirs ───────────────────────────────────────────────────────
     paths.path_codes_cloud   = paths.path_codes
@@ -556,7 +556,7 @@ def train_one_safety_area(safety_area: str, args, device):
             print(f"       Loss curves → {paths.path_training_curves}")
             print(f"       Checkpoints → {paths.path_models}")
 
-    suffix, paths = utc.get_create_results_path(
+    suffix, paths = ut.get_create_results_path(
         params.subgroup, params, args,paths,
         save_path_type = args.save_path_type,
         dir            = 'scripts/results',
@@ -632,7 +632,7 @@ def train_one_safety_area(safety_area: str, args, device):
     if args.verbose_level >= 0:
         print(f"Epochs already trained: {len(loss_history)}")
 
-    _ = utc.get_header(params, paths, verbose=True and args.verbose_level > 1)
+    _ = ut.get_header(params, paths, verbose=True and args.verbose_level > 1)
     
     # ── Training ─────────────────────────────────────────────────────────
     loss_history, log_messages = train(
@@ -677,7 +677,7 @@ def train_one_safety_area(safety_area: str, args, device):
                     notes="VAE-GAN trained on normal images only",
                     verbose=True)
     
-    utc.save_log_file(f'paths.log_file_full_{suffix}', log_messages, verbose= args.verbose_level > 0)
+    ut.save_log_file(f'paths.log_file_full_{suffix}', log_messages, verbose= args.verbose_level > 0)
     
     print(f"[safety_area] Done: {safety_area}")
 
@@ -699,7 +699,7 @@ def main():
     else:
         areas_to_train = [args.safety_area]
 
-    utc.get_time(suff="start")
+    ut.get_time(suff="start")
 
     for idx, area in enumerate(areas_to_train):
         if _STOP_TRAINING:
@@ -710,7 +710,7 @@ def main():
         train_one_safety_area(area, args, device)
 
     print("\nAll training complete.")
-    utc.get_time(suff="end")
+    ut.get_time(suff="end")
 
 
 if __name__ == "__main__":

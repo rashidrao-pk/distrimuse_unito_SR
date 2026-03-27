@@ -1,7 +1,6 @@
 import os
 import pandas as pd
 
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -301,12 +300,12 @@ def save_model(
 def load_model(Enc, Dec, D, optEncDec, optD, path_models, suffix, verbose=False, device='cuda'):
     model_path = os.path.join(path_models, f"model_{suffix}.pt")
 
-    if verbose:
-        print(f"TRYING MODEL FROM -> {model_path}")
-
+    # if verbose:
+    #     print(f"TRYING MODEL FROM --> {model_path}")
     if not os.path.exists(model_path):
         if verbose:
-            print(f"Path does not exist: {model_path}")
+            print('-'*50)
+            print(f"Model Not Found --> {model_path}")
         return [], None
 
     checkpoint = torch.load(model_path, map_location=device)

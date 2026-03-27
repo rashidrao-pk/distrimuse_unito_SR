@@ -75,9 +75,9 @@ from torchvision import datasets, transforms
 from PIL import Image
 from tqdm import tqdm
 
-import utils_CAD as utc
-import utils_model_CAD as utmc
-from utils_model_CAD import Encoder, Decoder, Discriminator
+import utils as ut
+import scripts.utils_model as utmc
+from scripts.utils_model import Encoder, Decoder, Discriminator
 
 # ---------------------------------------------------------------------------
 # Stop flag
@@ -197,7 +197,7 @@ def load_model_for_area(area: str, params, paths, args, device):
     Dec = Decoder(z_size=params.latent_dims).to(device)
     Dis = Discriminator().to(device)
     optED, optD = utmc.get_optimizers(Enc, Dec, Dis, verbose=False)
-    suffix, paths = utc.get_create_results_path(
+    suffix, paths = ut.get_create_results_path(
         area, params,args, paths,
         save_path_type=args.save_path_type,
         dir="scripts/results", verbose=False,
@@ -638,14 +638,14 @@ def run_test_mode(area: str, args, device, out_dir: str) -> dict:
 # ---------------------------------------------------------------------------
 
 def _setup_params_paths(area: str, args):
-    params, paths = utc.get_params_paths()
-    paths         = utc.get_paths(paths, verbose=False)
+    params, paths = ut.get_params_paths()
+    paths         = ut.get_paths(paths, verbose=False)
     params.subgroup      = area
     params.latent_dims   = args.latent_dims
     params.exp_type      = args.exp_type
     params.subgroup_mask = "mask"
     params.batch_size    = args.batch_size
-    paths, params = utc.get_dataset_version(
+    paths, params = ut.get_dataset_version(
         paths, params,
         dataset_version = args.dataset_version,
         dataset_type    = args.dataset_type,
@@ -653,7 +653,7 @@ def _setup_params_paths(area: str, args):
         subgroup        = area,
         verbose         = False,
     )
-    params = utc.get_parameters_by_experiment(params, verbose=False)
+    params = ut.get_parameters_by_experiment(params, verbose=False)
     paths.path_codes_cloud = paths.path_codes
     paths.path_codes_main  = os.path.join(paths.path_codes, "scripts")
     # paths.path_models      = os.path.join(paths.path_codes_main, "results", "models")
@@ -800,8 +800,8 @@ def main():
             else [args.safety_area]
 
     # Resolve output root once (needs at least one area for the path)
-    params, paths = utc.get_params_paths()
-    paths = utc.get_paths(paths, verbose=False)
+    params, paths = ut.get_params_paths()
+    paths = ut.get_paths(paths, verbose=False)
     paths.path_codes_main = os.path.join(paths.path_codes, "scripts")
     paths.path_models      = os.path.join(os.getcwd(), args.checkpoints)
     out_dir = args.output_dir or os.path.join(

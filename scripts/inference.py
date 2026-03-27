@@ -74,9 +74,9 @@ from sklearn.metrics import (
     recall_score, f1_score, cohen_kappa_score, classification_report
 )
 
-import utils_CAD as utc
-import utils_model_CAD as utmc
-from utils_model_CAD import Encoder, Decoder, Discriminator
+import utils as ut
+import scripts.utils_model as utmc
+from scripts.utils_model import Encoder, Decoder, Discriminator
 
 # ---------------------------------------------------------------------------
 # Global stop flag (Ctrl+C stops cleanly after the current frame)
@@ -194,7 +194,7 @@ def load_models(safety_areas, params, paths, args, device) -> dict:
     for area in safety_areas:
         print(f"[model] Loading: {area}")
         params.subgroup = area
-        suffix, paths = utc.get_create_results_path(
+        suffix, paths = ut.get_create_results_path(
             area, params,args, paths,
             save_path_type = args.save_path_type,
             dir            = "scripts/results",
@@ -241,7 +241,7 @@ def build_component_transform(component: str, paths, params, mask_image_name: in
     mask_arr = np.array(Image.open(mask_path).convert("L"))
     mask_bool = (mask_arr > 128)
 
-    masked_cropper = utc.MaskedCrop(subgroup=component, mask=mask_bool)
+    masked_cropper = ut.MaskedCrop(subgroup=component, mask=mask_bool)
 
     transform = transforms.Compose([
         masked_cropper,
@@ -799,14 +799,14 @@ def main():
     print(f"[areas] {safety_areas}")
 
     # ── Params / Paths ────────────────────────────────────────────────────
-    params, paths = utc.get_params_paths()
-    paths         = utc.get_paths(paths, verbose=False)
+    params, paths = ut.get_params_paths()
+    paths         = ut.get_paths(paths, verbose=False)
 
     params.latent_dims    = args.latent_dims
     params.exp_type       = args.exp_type
     params.subgroup_mask  = "mask"
     params.subgroup = safety_areas[0]
-    paths, params = utc.get_dataset_version(
+    paths, params = ut.get_dataset_version(
         paths, params,
         dataset_version = args.dataset_version,
         dataset_type    = args.dataset_type,
@@ -814,7 +814,7 @@ def main():
         subgroup        = safety_areas[0],
         verbose         = False,
     )
-    params = utc.get_parameters_by_experiment(params, verbose=False)
+    params = ut.get_parameters_by_experiment(params, verbose=False)
 
     paths.path_codes_cloud = paths.path_codes
     paths.path_codes_main  = os.path.join(paths.path_codes, "scripts")
@@ -863,7 +863,7 @@ def main():
     source = build_source(args)
 
     # ── Run inference ─────────────────────────────────────────────────────
-    utc.get_time(suff="start")
+    ut.get_time(suff="start")
     df_comp, df_frame = run_inference(
         safety_areas, models_dict, thresholds,
         component_transforms, source,
@@ -894,7 +894,7 @@ def main():
             eval_dir  = os.path.join(out_dir, "evaluation")
             evaluate(df_comp, df_gt, eval_dir, safety_areas)
 
-    utc.get_time(suff="end")
+    ut.get_time(suff="end")
     print(f"[done] Results in: {out_dir}")
 
 
