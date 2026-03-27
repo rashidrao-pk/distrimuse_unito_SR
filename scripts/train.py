@@ -628,7 +628,8 @@ def train_one_safety_area(safety_area: str, args, device):
     loss_history, config = utmc.load_model(Enc, Dec, Dis, optEncDec, optDis,
                                            path_models=paths.path_models,
                                            suffix=f"{params.subgroup}_{params.latent_dims}",
-                                           verbose=True,device=device)
+                                           verbose=True,
+                                           device=device)
     if args.verbose_level >= 0:
         print(f"Epochs already trained: {len(loss_history)}")
 

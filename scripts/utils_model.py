@@ -337,7 +337,8 @@ def load_model(Enc, Dec, D, optEncDec, optD, path_models, suffix, verbose=False,
             print(f"  Train images: {config.get('dataset', {}).get('n_train_images', None)}")
             print(f"  Val images:   {config.get('dataset', {}).get('n_val_images', None)}")
             print(f"  Batch size:   {config.get('training', {}).get('batch_size', None)}")
-            print(f"  Augment:      {config.get('augmentation', {}).get('pipeline', None)}")
+
+            # print(f"  Augment:      {config.get('augmentation', {}).get('pipeline', None)}")
 
     return loss_history, config
 
