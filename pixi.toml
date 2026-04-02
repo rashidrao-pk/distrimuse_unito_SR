@@ -28,4 +28,11 @@ pytorch-cuda = { version = "12.1.*", channel = "pytorch" }
 ros-jazzy-rclpy = "*"
 ros-jazzy-sensor-msgs = "*"
 ros-jazzy-cv-bridge = "*"
+scipy = ">=1.17.1,<2"
+matplotlib = ">=3.10.8,<4"
+plotly = ">=6.6.0,<7"
+scikit-image = ">=0.26.0,<0.27"
+tqdm = ">=4.67.3,<5"
+scikit-learn = ">=1.8.0,<2"
+pandas = ">=3.0.2,<4"
 

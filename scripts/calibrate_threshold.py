@@ -805,7 +805,7 @@ def main():
     paths.path_codes_main = os.path.join(paths.path_codes, "scripts")
     paths.path_models      = os.path.join(os.getcwd(), args.checkpoints)
     out_dir = args.output_dir or os.path.join(
-        paths.path_codes_main, "results", "threshold"
+        paths.path_codes_main, "results", "thresholds"
     )
     args.test_dir = os.path.join(paths.path_datasets_main, args.test_folder)
     args.gt_csv_path = os.path.join(os.getcwd(), args.gt_csv)

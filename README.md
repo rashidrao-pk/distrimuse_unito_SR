@@ -99,34 +99,7 @@ pixi install
 pixi run python -c "import rclpy; from sensor_msgs.msg import Image; print('ROS OK')"
 ```
 
-## RUN ADVIS ROS in DM_UNITO
 
-
-conda config --env --remove channels defaults || true
-conda config --env --add channels conda-forge
-conda config --env --add channels robostack-jazzy
-conda config --env --set channel_priority strictconda config --env --remove channels defaults || true
-conda config --env --add channels conda-forge
-conda config --env --add channels robostack-jazzy
-conda config --env --set channel_priority strict
-
-
-mamba install -y \
-  ros-jazzy-ros-base \
-  ros-jazzy-rclpy \
-  ros-jazzy-sensor-msgs \
-  ros-jazzy-cv-bridge \
-  ros-jazzy-vision-opencv
-
-
-
-conda activate dm_unito
-
-python -c "import torch; print(torch.__version__); print(torch.version.cuda); print(torch.cuda.is_available())"
-python -c "import rclpy; print('rclpy ok')"
-python -c "from sensor_msgs.msg import Image; print('sensor_msgs ok')"
-python -c "from cv_bridge import CvBridge; print('cv_bridge ok')"
-python -c "import cv2; print(cv2.__version__)"
 
 
 Saved folders should be like this
@@ -217,7 +190,12 @@ nvidia-smi
 ```
 
 ```bash
-pixi run python scripts/infer_ros_live.py
+# verify topic
+pixi run ros2 topic list | grep camera
+
+## Verify frame for camera acngle
+pixi run ros2 topic hz /camera/back_view/image_raw
+
 ```
 
 <!-- /home/unito/advis/advis_distrimuse_unito_SR/scripts/results/models -->
@@ -227,17 +205,51 @@ pixi run python scripts/infer_ros_live.py
 
 ```bash
 pixi run python scripts/infer_ros_live.py \
+--camera_topic /camera/back_view/image_raw   \
+--safety_area ALL   \
+--static_mask_paths   /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_RoboArm_MASK.png   /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_ConvBelt_MASK.png   /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_PLeft_MASK.png   /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_PRight_MASK.png \
+--threshold_dir /home/unito/advis/advis_distrimuse_unito_SR/scripts/results/threshold   \
+--checkpoints ../advis_distrimuse_unito_SR/scripts/results/models   \
+--latent_dims 64   \
+--frame_stride 5
+# ---------
+
+
+
+pixi run python scripts/infer_ros_live.py \
   --camera_topic /camera/back_view/image_raw \
   --safety_area ALL \
+  --area_names RoboArm ConvBelt PLeft PRight \
   --static_mask_paths \
+    /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_RoboArm_MASK.png \
+    /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_ConvBelt_MASK.png \
     /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_PLeft_MASK.png \
     /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_PRight_MASK.png \
-    /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_ConvBelt_MASK.png \
-    /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_RoboArm_MASK.png \
-  --threshold_dir /home/unito/advis/advis_distrimuse_unito_SR/scripts/results/threshold \
-  --checkpoints ../advis_distrimuse_unito_SR/scripts/results/models \
+  --threshold_dir /home/unito/advis/advis_distrimuse_unito_SR/scripts/results/thresholds \
+  --checkpoints /home/unito/advis/advis_distrimuse_unito_SR/scripts/results/models \
   --latent_dims 64 \
-  --frame_stride 5
+  --frame_stride 1 \
+  --verbose_level 3 \
+  --log_every_n 1
+
+
+
+
+pixi run python scripts/infer_ros_live.py \
+  --camera_topic /camera/back_view/image_raw \
+  --safety_area ALL \
+  --area_names RoboArm ConvBelt PLeft PRight \
+  --static_mask_paths \
+    /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_RoboArm_MASK.png \
+    /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_ConvBelt_MASK.png \
+    /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_PLeft_MASK.png \
+    /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_PRight_MASK.png \
+  --threshold_dir /home/unito/advis/advis_distrimuse_unito_SR/scripts/results/thresholds \
+  --checkpoints /home/unito/advis/advis_distrimuse_unito_SR/scripts/results/models \
+  --latent_dims 64 \
+  --frame_stride 1 \
+  --verbose_level 3 \
+  --log_every_n 1
 ```
 
 **Verify Inference Setup**
