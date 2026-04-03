@@ -11,50 +11,33 @@ An anomaly detection pipeline based on variational autoencoder models that monit
 
 ## 1. Setup
 
-Connect to remote device
+**Connect to remote device**
+
 ```bash
 ssh -X unito@distrimuse
 ```
 
-### 1.1 Repo 
+## START BROADCAST from  TERMINAL (having pixi setup)
 
-```bash
-cd ~/advis/
-cd ~/advis/advis_distrimuse_unito_SR
-```
+Make sure that PIXI is installed and fully setup (otherwise follow [this article](README_FIRST_TIME.MD))
 
-
-### Verify Models
-
-
----
-Verify ROS-bag:
 ```bash
 cd ~/advis/distrimuse-image-broadcaster
+export ROS_LOCALHOST_ONLY=1
+export ROS_DOMAIN_ID=0
+export RMW_IMPLEMENTATION=rmw_fastrtps_cpp
+
+# Verify Frames
 pixi run ros2 bag info /home/unito/advis/bags/recording_20260313_133316
+## Replay from last pre-recorded
+pixi run replay /home/unito/advis/bags/recording_20260313_133316/ --no-display --loop
 ```
-
-Open Terminal and broadcast Frames
-
-
-Now Play the video
-
-```bash
-pixi run replay /home/unito/advis/bags/recording_20260313_133316/
-pixi run replay /home/unito/advis/bags/recording_20260313_133316/ --no-display
-
-```
-
+### Save Frames from Broadcast 
 ### 1.3 Replay or Save frames
-
-
 
 and run following command to `Save` frames
 
-
 ```bash
-cd ~/advis/distrimuse-image-broadcaster
-
 pixi run python scripts/pixi/pixi_flow.py   \
     --ros-args   -p save_dir:=/home/unito/advis/DS/SR/v3/train_processed/back_view \
     -p camera_topic:=/camera/back_view/image_raw    \
@@ -68,8 +51,18 @@ pixi run python scripts/pixi/pixi_flow.py   \
 ```
 
 
-### TRAIN USING NEW DATA THROGH ROS
+### 1.1 Repo 
 
+```bash
+cd ~/advis/
+cd ~/advis/advis_distrimuse_unito_SR
+```
+
+### Verify Models
+
+
+
+### TRAIN USING NEW DATA THROGH ROS
 
 ```bash
 python scripts/train.py \
@@ -84,12 +77,13 @@ python scripts/train.py \
 ```
 
 
-
-
-### RUN IN ADVIS
+### Setup ADVIS using PIXI (RUN IN ADVIS)
 
 **1. Install Pixi env**
+This line will use [pixi.toml](pixi.toml) file and will install its dependencies.
+
 ```bash
+cd ~/advis/advis_distrimuse_unito_SR
 pixi install
 ```
 
@@ -98,9 +92,6 @@ pixi install
 ```bash
 pixi run python -c "import rclpy; from sensor_msgs.msg import Image; print('ROS OK')"
 ```
-
-
-
 
 Saved folders should be like this
 
@@ -117,6 +108,11 @@ train_processed/
 └── RoboArm/
 ```
 
+## FULL SETUP FROM Image Broadcast 
+
+### Step 1 - OFFLINE TRANING - Receive data and save frames for training
+
+#### Step 1.1 - OFFLINE TRANING - Frame conversion, masking, resizing and saving to disk.
 
 ```bash
 cd ~/advis/distrimuse-image-broadcaster
@@ -139,64 +135,67 @@ pixi run python scripts/pixi/pixi_saveframes.py \
 
 ```
 
+#### 1.2 - OFFLINE TRANING - load preprocessed data and train models
 
-## TRAIN FROM ROS Saved Data
-```bash
+- `Train` for `One - Pallet Right` Safety Area:
 
-python scripts/train.py \
-  --safety_area PLeft \
-  --dataset_source SR \
-  --dataset_version v3 \
-  --dataset_cam_type back_view \
-  --epochs 200 \
-  --batch_size 16 \
-  --latent_dims 64 \
-  --augmentation_type custom
+  ```bash
+  python scripts/train.py \
+    --safety_area PRight --dataset_source SR \
+    --dataset_version v3 --dataset_cam_type back_view \
+    --epochs 200 --batch_size 16 --latent_dims 64 \
+    --augmentation_type custom
+  ```
 
 
-```
+- `TRAIN` FOR `ALL` safety areas 
+    ```bash
+    python scripts/train.py \
+      --safety_area ALL \
+      --dataset_source SR \
+      --dataset_version v3 \
+      --dataset_cam_type back_view \
+      --epochs 20 \
+      --batch_size 16 \
+      --latent_dims 64 \
+      --augmentation_type custom
+    ```
+
+### Step 2 - Threshold Calibration
+
+`Calibrate Threshold` using `Validation` Set using rest of the `20%` data from training.
+
+- For `one - Pallet Right` Safety Area
+  ```bash
+  # NEW MODEL
+  python scripts/calibrate_threshold.py --mode val --safety_area PRight --dataset_version v3 --dataset_type back_view --checkpoints scripts/results
+  ```
+- For `ALL` Safety Area
+  ```bash
+  python scripts/calibrate_threshold.py --mode val --safety_area ALL --dataset_version v3 --dataset_type back_view --checkpoints scripts/results
+
+  ```
 
 
-TRAIN FOR ALL 
+### Step 3 - Live Inference
 
+- CHECK GPU BEFORE INF
 
-```bash
-python scripts/train.py \
-  --safety_area ALL \
-  --dataset_source SR \
-  --dataset_version v3 \
-  --dataset_cam_type back_view \
-  --epochs 20 \
-  --batch_size 16 \
-  --latent_dims 64 \
-  --augmentation_type custom
-```
+  ```python
+  cd ~/advis/advis_distrimuse_unito_SR
+  pixi run python -c "import torch; print(torch.__version__); print(torch.version.cuda); print(torch.cuda.is_available()); print(torch.cuda.device_count())"
+  #nvidia-smi
+  ```
 
+- Verify topics in from Image-Broadcast 
 
-```bash
-# NEW MODEL
-python scripts/calibrate_threshold.py --mode val --safety_area PLeft --dataset_version v3 --dataset_type back_view --checkpoints scripts/results
-
-python scripts/calibrate_threshold.py --mode val --safety_area ALL --dataset_version v3 --dataset_type back_view --checkpoints scripts/results
-
-```
-
-
-## CHECK GPU BEFORE INF
-
-```bash
-pixi run python -c "import torch; print(torch.__version__); print(torch.version.cuda); print(torch.cuda.is_available()); print(torch.cuda.device_count())"
-nvidia-smi
-```
-
-```bash
-# verify topic
-pixi run ros2 topic list | grep camera
-
-## Verify frame for camera acngle
-pixi run ros2 topic hz /camera/back_view/image_raw
-
-```
+  ```python
+    cd ~/advis/distrimuse-image-broadcaster
+    # verify topic
+    pixi run ros2 topic list | grep camera
+    ## Verify frame for camera acngle
+    pixi run ros2 topic hz /camera/back_view/image_raw
+  ```
 
 <!-- /home/unito/advis/advis_distrimuse_unito_SR/scripts/results/models -->
 <!-- /home/unito/advis/advis_distrimuse_unito_SR/scripts/results/threshold/RoboArm/threshold_RoboArm.json

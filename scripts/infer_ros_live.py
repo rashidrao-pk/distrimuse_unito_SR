@@ -205,7 +205,6 @@ def load_models_and_thresholds(areas, args, device, log_fn=None):
     return models, thresholds
 
 
-
 class LiveRosAnomalyInfer(Node):
     def __init__(self, args):
         super().__init__("live_ros_anomaly_infer")
@@ -262,7 +261,7 @@ class LiveRosAnomalyInfer(Node):
         sensor_qos = QoSProfile(
             reliability=ReliabilityPolicy.RELIABLE,
             history=HistoryPolicy.KEEP_LAST,
-            depth=1,   # important: keep only newest message in DDS queue
+            depth=1,
         )
 
         self.subscription = self.create_subscription(
@@ -272,8 +271,8 @@ class LiveRosAnomalyInfer(Node):
             sensor_qos,
         )
 
-        self.frame_count = 0          # received frames
-        self.processed_count = 0      # processed frames
+        self.frame_count = 0
+        self.processed_count = 0
         self.max_frames = args.max_frames
         self.start_time = time.time()
         self.first_callback_seen = False
@@ -282,11 +281,11 @@ class LiveRosAnomalyInfer(Node):
         self.latest_msg_id = 0
         self.last_processed_msg_id = 0
         self.is_processing = False
+        self.process_start_time = None
 
         self.wait_start = time.time()
         self.wait_timer = self.create_timer(5.0, self.wait_for_first_frame_log)
 
-        # process loop: handles only newest frame
         self.process_timer = self.create_timer(args.process_period, self.process_latest_frame)
 
         self.vlog(1, f"[subscriber] subscribed to {args.camera_topic}")
@@ -393,7 +392,7 @@ class LiveRosAnomalyInfer(Node):
         msg_id = self.latest_msg_id
 
         self.is_processing = True
-        callback_t0 = time.time()
+        process_t0 = time.time()
 
         try:
             if self.args.frame_stride > 1 and (msg_id % self.args.frame_stride != 0):
@@ -405,6 +404,10 @@ class LiveRosAnomalyInfer(Node):
 
             t_convert = time.time()
             frame_bgr = self.bridge.imgmsg_to_cv2(msg, desired_encoding="bgr8")
+
+            if self.processed_count == 0:
+                self.process_start_time = time.time()
+
             self.processed_count += 1
 
             self.vlog(
@@ -436,14 +439,16 @@ class LiveRosAnomalyInfer(Node):
 
             self.last_processed_msg_id = msg_id
 
-            elapsed = time.time() - self.start_time
-            fps = self.processed_count / max(elapsed, 1e-6)
+            proc_elapsed = time.time() - self.process_start_time if self.process_start_time else 0.0
+            avg_fps = self.processed_count / max(proc_elapsed, 1e-6)
+            inst_fps = 1.0 / max(time.time() - process_t0, 1e-6)
 
             if self.processed_count % self.log_every_n == 0 or self.processed_count == 1:
                 msg_parts = [
                     f"raw_frame={msg_id}",
                     f"processed={self.processed_count}",
-                    f"fps={fps:.2f}",
+                    f"avg_fps={avg_fps:.2f}",
+                    f"inst_fps={inst_fps:.2f}",
                 ]
                 for area in self.areas:
                     r = results[area]
@@ -455,7 +460,7 @@ class LiveRosAnomalyInfer(Node):
                         msg_parts.append(f"{area}: status={r['status']}")
                 self.vlog(1, " | ".join(msg_parts))
 
-            self.vlog(3, f"[process] total time={time.time() - callback_t0:.4f}s")
+            self.vlog(3, f"[process] total time={time.time() - process_t0:.4f}s")
 
             if self.max_frames is not None and self.processed_count >= self.max_frames:
                 self.vlog(1, "[process] reached max_frames, shutting down")
@@ -465,6 +470,7 @@ class LiveRosAnomalyInfer(Node):
             self.get_logger().error(f"[process-error] {e}")
         finally:
             self.is_processing = False
+
 
 def parse_args():
     p = argparse.ArgumentParser("Live ROS anomaly inference")
@@ -488,23 +494,24 @@ def parse_args():
     p.add_argument("--subgroup_mask", default="MASK")
     p.add_argument("--save_path_type", default="local")
     p.add_argument("--save_figures", action="store_true", default=False)
-    p.add_argument(
-    "--process_period",
-    type=float,
-    default=0.05,
-    help="seconds between processing attempts; uses only the latest received frame"
-)
+
     p.add_argument(
         "--verbose_level",
         type=int,
         default=2,
-        help="0=silent, 1=major steps, 2=callback/frame logs, 3=per-area details, 4=very verbose"
+        help="0=silent, 1=major steps and summaries, 2=process/frame logs, 3=per-area details, 4=very verbose"
     )
     p.add_argument(
         "--log_every_n",
         type=int,
         default=1,
         help="log summary every N processed frames"
+    )
+    p.add_argument(
+        "--process_period",
+        type=float,
+        default=0.05,
+        help="seconds between processing attempts; only latest frame is used"
     )
 
     return p.parse_args()
