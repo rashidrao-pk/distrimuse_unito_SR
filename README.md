@@ -305,12 +305,36 @@ pixi run python scripts/infer_ros_live_GUI.py \
 
 # 9. Publish Detection Response to Rulex
 
-```bash
-pixi run python scripts/infer_ros_live_MSG.py \
---publish_rulex \
---rulex_topic /rulex/detection_result
-```
+1. Publish message
+    ```bash
+    pixi run python scripts/infer_ros_live_MSG.py \
+    --publish_rulex \
+    --rulex_topic /rulex/detection_result
+    ```
+2. Verify Message
+      ```bash
+      source /home/unito/advis/distrimuse-ros2-api/install/setup.bash
+      pixi run ros2 topic echo /rulex/detection_result
+       ```
 
+### DEMO
+1. Run Broadcast in 1 terminal 
+    ```bash
+    cd ~/advis/distrimuse-image-broadcaster
+    pixi run replay /home/unito/advis/bags/recording_20260313_133316/ --no-display --loop
+    ```
+2. Run Detection in 2nd terminal 
+    ```bash
+    cd ~/advis/advis_distrimuse_unito_SR
+    source /home/unito/advis/distrimuse-ros2-api/install/setup.bash
+    pixi run python /home/unito/advis/test/simple_infer_ros.py   --camera_topic /camera/back_view/image_raw   --rulex_topic /rulex/detection_result   --area_names RoboArm ConvBelt PLeft PRight   --mode toggle
+    ```
+3. Run Detection in 3rd terminal 
+    ```bash
+    cd ~/advis/distrimuse-image-broadcaster
+    source /home/unito/advis/distrimuse-ros2-api/install/setup.bash
+    pixi run ros2 topic echo /rulex/detection_result
+    ```
 ---
 
 # Repository Structure
@@ -333,6 +357,8 @@ advis_distrimuse_unito_SR/
 ```
 
 ---
+
+
 
 # Acknowledgements
 

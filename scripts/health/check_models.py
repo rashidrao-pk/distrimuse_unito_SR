@@ -77,6 +77,7 @@ def build_suffix_for_area(area, args):
         paths,
         save_path_type=args.save_path_type,
         dir="scripts/results",
+        create_dirs = True,
         verbose=False,
     )
     return suffix
@@ -113,6 +114,9 @@ def plot_loss_sep(
         print(f"[WARN] Empty loss_history for suffix={paths.suffix}, skipping plot.")
         return
 
+    n_epochs = len(loss_history)
+    epochs = np.arange(1, n_epochs + 1)
+
     def get_series(key, default=np.nan):
         vals = []
         for l in loss_history:
@@ -127,28 +131,29 @@ def plot_loss_sep(
         raise ValueError("plot_type must be 2 or 3")
 
     ax = axs[0]
-    ax.plot(get_series("recon_loss"), label="Reconstruction Loss")
-    ax.plot(get_series("kl_loss"), label="KL Loss")
-    ax.plot(get_series("beta_kl_loss"), label="beta * KL Loss")
-    ax.plot(get_series("gan_loss"), label="GAN Loss")
-    ax.plot(get_series("beta_gan_loss"), label="beta * GAN Loss")
-    ax.plot(get_series("vae_loss"), label="VAE Loss")
-    ax.plot(get_series("annealing_lambda"), label="Annealing")
+    ax.plot(epochs, get_series("recon_loss"), label="Reconstruction Loss")
+    ax.plot(epochs, get_series("kl_loss"), label="KL Loss")
+    ax.plot(epochs, get_series("beta_kl_loss"), label="beta * KL Loss")
+    ax.plot(epochs, get_series("gan_loss"), label="GAN Loss")
+    ax.plot(epochs, get_series("beta_gan_loss"), label="beta * GAN Loss")
+    ax.plot(epochs, get_series("vae_loss"), label="VAE Loss")
+    ax.plot(epochs, get_series("annealing_lambda"), label="Annealing")
     ax.set_xlabel("Epoch")
     ax.set_ylabel("VAE Loss (Log)")
     ax.set_yscale("log")
+    ax.set_xlim(1, n_epochs)
     ax.legend()
 
     ax = axs[1]
     ax.scatter(
-        range(len(loss_history)),
+        epochs,
         get_series("dis_acc"),
         label="Accuracy(Dis)",
         alpha=0.5,
         marker="+",
     )
     ax.scatter(
-        range(len(loss_history)),
+        epochs,
         get_series("dis_F1"),
         label="F1(Dis)",
         alpha=0.5,
@@ -156,30 +161,40 @@ def plot_loss_sep(
     )
     ax.set_xlabel("Epoch")
     ax.set_ylabel("Discriminator Scores")
+    ax.set_xlim(1, n_epochs)
     ax.legend()
 
     if plot_type == 3:
         ax = axs[2]
-        ax.plot(get_series("gan_loss"), label="GAN Loss")
+        ax.plot(epochs, get_series("gan_loss"), label="GAN Loss")
         ax.scatter(
-            range(len(loss_history)),
+            epochs,
             get_series("disc_loss"),
             label="Discriminator Loss",
             s=8,
         )
         ax.set_xlabel("Epoch")
         ax.set_ylabel("GAN/Disc Loss")
+        ax.set_xlim(1, n_epochs)
         ax.legend()
 
-    header_top = f"Loss Progression (Loaded Epochs: {len(loss_history)})"
+    tick_step = max(1, n_epochs // 10)
+    x_ticks = list(range(1, n_epochs + 1, tick_step))
+    if x_ticks[-1] != n_epochs:
+        x_ticks.append(n_epochs)
+    for ax in axs:
+        ax.set_xticks(x_ticks)
+
+    header_top = f"Loss Progression (Loaded Epochs: {n_epochs})"
     if plot_long_header:
         column_headers = ["DS_v", "camera", "subgroup", "Epochs"]
         column_widths = [12, 12, 12, 14]
+        total_epochs = getattr(params, "epochs", n_epochs)
         values = [
             str(paths.dataset_version),
             str(paths.dataset_type),
             str(params.subgroup),
-            str(len(loss_history)),
+            f"{n_epochs}/{total_epochs}",
         ]
 
         header_row = "| " + " | ".join(h.ljust(w) for h, w in zip(column_headers, column_widths)) + " |"
@@ -235,7 +250,7 @@ def load_model_bundle(area, args, device):
     print(f"[LOAD] checkpoint_root={checkpoint_root}")
     print(f"[LOAD] suffix={suffix}")
 
-    history = utmc.load_model(
+    history,config = utmc.load_model(
         enc, dec, dis, optED, optD,
         checkpoint_root, suffix, device=device, verbose=True
     )
@@ -350,9 +365,12 @@ def main():
     for area in areas:
         try:
             bundle = load_model_bundle(area, args, device)
+            
             run_dummy_reconstruction(area, bundle, dummy_tensor, dummy_rgb, args.demo_dir)
 
             plot_params, plot_paths = make_plot_paths(area, args, args.demo_dir)
+            plot_params.epochs = len(bundle["history"])
+            print('plot_paths-->', plot_paths)  # Debug: print the paths used for plotting
             plot_loss_sep(
                 bundle["history"],
                 plot_params,
