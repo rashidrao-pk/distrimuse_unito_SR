@@ -383,7 +383,7 @@ def load_model(Enc, Dec, D, optEncDec, optD, path_models, suffix,verbose_level=1
         print(f'path_models --> ', {model_path})
         print('-' * 100)
     if not os.path.exists(model_path):
-        if verbose:
+        if verbose and verbose_level>1:
             print('-' * 50)
             print(f"Model Not Found --> {model_path}")
         return [], None
