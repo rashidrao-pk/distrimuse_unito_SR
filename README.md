@@ -5,6 +5,8 @@
 
 ---
 
+<img src="doc/header.png" width="100%">
+
 ## Use Case 3 — Safe Interaction with Robots
 
 This repository contains a **real-time anomaly detection pipeline** based on **VAE / VAE-GAN models** for monitoring industrial safety areas in collaborative robotics environments.
@@ -61,7 +63,7 @@ The following external libraries are used for ROS2 communication:
 
 Repositories:
 
-- [https://github.com/smart-robotics/**_distrimuse-image-broadcaster_**`](https://github.com/smart-robotics/distrimuse-image-broadcaster)
+- [https://github.com/smart-robotics/**_distrimuse-image-broadcaster_**](https://github.com/smart-robotics/distrimuse-image-broadcaster)
 - [https://github.com/smart-robotics/**_distrimuse-ros2-api_**](https://github.com/smart-robotics/distrimuse-ros2-api)
 
 ---
