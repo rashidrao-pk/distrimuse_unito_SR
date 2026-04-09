@@ -35,7 +35,6 @@ AREA_NAME_TO_ENUM = {
     "PRight": RulexAreaScore.AREA_D,
 }
 
-
 class SimpleRosInfer(Node):
     def __init__(self, args):
         super().__init__("simple_ros_infer")
