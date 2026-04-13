@@ -74,9 +74,6 @@ pixi run ros2 topic echo /camera/front_view/image_raw --once
 
 
 
-
-
-
 **Dataset V3**
 
 ```bash
@@ -261,7 +258,7 @@ Model Checkpoints are seperately provided and are available at following GitLab 
 
 Download Model checkpoints uploaded on following `GitLab` repo for `Real Palletizing` dataset for UC3 ( dataset provided by `Smart Robotics`, Netherlands for `DEMO-3.3` of UC3):
 ```bash
-cd distrimuse_unito/scripts
+cd ~/advis/advis_distrimuse_unito_SR/scripts
 git init
 git pull https://gitlab.di.unito.it/rashid/dm_checkpoints_demo33    # FOR REAL ROBOT Palletizing - DEMO 3.3
 cd ..

@@ -162,7 +162,7 @@ def build_suffix_for_area(area, args):
     return suffix
 
 
-def load_models_and_thresholds(areas, args, device, log_fn=None):
+def load_models_and_thresholds(areas, args, device, log_fn=None, verbose=True):
     models = {}
     thresholds = {}
 
@@ -170,22 +170,22 @@ def load_models_and_thresholds(areas, args, device, log_fn=None):
 
     for area in areas:
         if log_fn:
-            log_fn(1, f"[model-load] preparing area={area}")
+            log_fn(1, f"[model-load] preparing area= | {area} |")
 
         enc = Encoder(z_size=args.latent_dims).to(device)
         dec = Decoder(z_size=args.latent_dims).to(device)
         dis = Discriminator().to(device)
 
-        optED, optD = utmc.get_optimizers(enc, dec, dis, verbose=False)
+        optED, optD = utmc.get_optimizers(enc, dec, dis, verbose=verbose)
         suffix = build_suffix_for_area(area, args)
 
         if log_fn:
-            log_fn(2, f"[model-load] area={area} suffix={suffix}")
-            log_fn(2, f"[model-load] checkpoint_root={checkpoint_root}")
+            log_fn(2, f"[model-load] area= | {area} | suffix={suffix}")
+            log_fn(2, f"[model-load] checkpoint_root={checkpoint_root} - {suffix}")
 
         history = utmc.load_model(
             enc, dec, dis, optED, optD,
-            checkpoint_root, suffix, device=device, verbose=False
+            checkpoint_root, suffix, device=device, verbose=verbose
         )
 
         if len(history) == 0:
@@ -207,7 +207,7 @@ def load_models_and_thresholds(areas, args, device, log_fn=None):
 
 class LiveRosAnomalyInfer(Node):
     def __init__(self, args):
-        super().__init__("live_ros_anomaly_infer")
+        super().__init__("LIVE_INFER")
 
         self.args = args
         self.verbose_level = args.verbose_level
@@ -231,6 +231,8 @@ class LiveRosAnomalyInfer(Node):
         self.vlog(1, f"[startup] active areas={self.areas}")
 
         self.vlog(1, "[startup] loading models and thresholds...")
+        self.vlog(1, "-"*100)
+
         t0 = time.time()
         self.models, self.thresholds = load_models_and_thresholds(
             self.areas, args, self.device, log_fn=self.vlog
@@ -338,8 +340,8 @@ class LiveRosAnomalyInfer(Node):
         input_tensor = input_tensor.unsqueeze(0).to(self.device)
 
         self.vlog(
-            3,
-            f"[preprocess] {area_name}: bbox={bbox}, tensor_shape={tuple(input_tensor.shape)}, time={time.time() - t0:.4f}s"
+            4,
+            f"[preprocess] {area_name}: bbox={bbox}, time={time.time() - t0:.4f}s"
         )
         return input_tensor, bbox
 
