@@ -192,6 +192,20 @@ from datetime import datetime
 import pandas as pd
 import torch
 
+def make_json_safe(obj):
+    if obj is None:
+        return None
+    if isinstance(obj, (str, int, float, bool)):
+        return obj
+    if isinstance(obj, dict):
+        return {k: make_json_safe(v) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple)):
+        return [make_json_safe(v) for v in obj]
+    if hasattr(obj, "__dict__"):
+        return {k: make_json_safe(v) for k, v in vars(obj).items()}
+    return str(obj)
+
+
 def save_model(
     Enc,
     Dec,
@@ -210,7 +224,7 @@ def save_model(
     train_dir=None,
     notes=None,
     verbose=False,
-    model_variant = 'new',
+    model_variant = 'old',
 ):
     if model_variant=='old':
         optEncDec_name  =   'optimizer_enc_state_dict'
@@ -345,7 +359,7 @@ def save_model(
             "pipeline": safe_transform_to_string(augmentation)
         },
 
-        "params": params if params is not None else {},
+        "params": make_json_safe(params) if params is not None else {},
         "notes": notes,
     }
 

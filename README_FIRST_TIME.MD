@@ -1,218 +1,826 @@
+# ADVIS DistriMuSe Setup Guide
 
+This repository contains setup instructions for the **ADVIS DistriMuSe anomaly detection pipeline**, including:
+
+- Server connection
+- Dataset transfer
+- Image streaming setup
+- ROS/Pixi environment setup
+- Frame extraction
+- Training/inference pipeline
+- Model checkpoint retrieval
+
+---
+
+# 1. Connect to Server
 
 ```bash
-# Connect Server
 ssh -Y unito@distrimuse
-
 ```
 
+---
 
-
-### 1.1 Retreive Codes 
+# 2. Retrieve Source Code
 
 ```bash
-
 cd ~/advis/
 git clone https://github.com/rashidrao-pk/advis_distrimuse_unito_SR
 cd ~/advis/advis_distrimuse_unito_SR
 ```
 
+---
 
 
+# 3. Dataset Transfer
 
+<details>
+<summary><strong>📂 Copy Dataset v2 to Server (Click to Expand)</strong></summary>
 
+<br>
 
-
-### 1.2 Tranport Data
-
-Ship Datasets to server
-
-**Dataset v2**
+## Copy Raw Videos
 
 ```bash
+scp D:\DS\SR\v2\camera1_20251210_142154_normal.mp4 \
+unito@distrimuse:/home/unito/advis/DS/SR/v2
 
-# Copy Raw Videos 
+scp D:\DS\SR\v2\camera1_20251210_150045_box_fall.mp4 \
+unito@distrimuse:/home/unito/advis/DS/SR/v2
 
-scp D:\DS\SR\v2\camera1_20251210_142154_normal.mp4 unito@distrimuse:/home/unito/advis/DS/SR/v2
-
-scp D:\DS\SR\v2\camera1_20251210_150045_box_fall.mp4 unito@distrimuse:/home/unito/advis/DS/SR/v2
-
-scp D:\DS\SR\v2\camera1_20251210_151444_fallen_operator.mp4 unito@distrimuse:/home/unito/advis/DS/SR/v2
-
-## Copy Processed Data
-scp D:\DS\SR\v2\processed.zip unito@distrimuse:/home/unito/advis/DS/SR/v2
-scp D:\DS\SR\v2\refined.zip unito@distrimuse:/home/unito/advis/DS/SR/v2
-scp D:\DS\SR\v2\masks.zip unito@distrimuse:/home/unito/advis/DS/SR/v2
-
-### TEST Data
-scp D:\DS\SR\v2\camera1_20251210_150045_box_fall.zip unito@distrimuse:/home/unito/advis/DS/SR/v2
-scp D:\DS\SR\v2\camera1_20251210_151444_fallen_operator.zip unito@distrimuse:/home/unito/advis/DS/SR/v2
-
-
-cd /home/unito/advis/DS/SR/v2
-unzip processed.zip -d /home/unito/advis/DS/SR/v2
-unzip refined.zip -d /home/unito/advis/DS/SR/v2
-unzip masks.zip -d /home/unito/advis/DS/SR/v2
-
-unzip camera1_20251210_150045_box_fall.zip -d /home/unito/advis/DS/SR/v2
-unzip camera1_20251210_151444_fallen_operator.zip -d /home/unito/advis/DS/SR/v2
-
-rm camera1_20251210_150045_box_fall.zip
-rm camera1_20251210_151444_fallen_operator.zip
-
+scp D:\DS\SR\v2\camera1_20251210_151444_fallen_operator.mp4 \
+unito@distrimuse:/home/unito/advis/DS/SR/v2
 ```
 
-#### ONLY ONCE
+## Copy Processed Data
+
 ```bash
-# INTALL DISPLAY Settings 
+scp D:\DS\SR\v2\processed.zip \
+unito@distrimuse:/home/unito/advis/DS/SR/v2
+
+scp D:\DS\SR\v2\refined.zip \
+unito@distrimuse:/home/unito/advis/DS/SR/v2
+
+scp D:\DS\SR\v2\masks.zip \
+unito@distrimuse:/home/unito/advis/DS/SR/v2
+```
+
+## Copy Test Data
+
+```bash
+scp D:\DS\SR\v2\camera1_20251210_150045_box_fall.zip \
+unito@distrimuse:/home/unito/advis/DS/SR/v2
+
+scp D:\DS\SR\v2\camera1_20251210_151444_fallen_operator.zip \
+unito@distrimuse:/home/unito/advis/DS/SR/v2
+```
+
+---
+
+## 3.2 Unzip Dataset
+
+```bash
+cd /home/unito/advis/DS/SR/v2
+
+unzip processed.zip -d .
+unzip refined.zip -d .
+unzip masks.zip -d .
+
+unzip camera1_20251210_150045_box_fall.zip -d .
+unzip camera1_20251210_151444_fallen_operator.zip -d .
+```
+
+### Cleanup ZIP Files
+
+```bash
+rm camera1_20251210_150045_box_fall.zip
+rm camera1_20251210_151444_fallen_operator.zip
+```
+</details>
+
+---
+
+# 4. Display / GUI Setup (Run Once)
+
+```bash
 sudo apt install -y libxcb-cursor0
+```
+
+---
+
+# 5. Dataset v3 Transfer
+
+```bash
+scp D:/DS/SR/v3/recording_20260313_133316.zip \
+unito@HPZ2miniDistriMuSe:
+```
+
+```bash
+cd /home/unito/distrimuse
+mkdir -p bags
+
+unzip recording_20260313_133316.zip -d bags
+
+find /home/unito/advis/bags/recording_20260313_133316 \
+-maxdepth 2 -type f
+```
+
+
+### Test ROS Topics
+
+```bash
 pixi run ros2 topic list
 pixi run ros2 topic hz /camera/front_view/image_raw
 pixi run ros2 topic echo /camera/front_view/image_raw --once
 ```
 
 
+---
 
-
-**Dataset V3**
-
-```bash
-scp D:/DS/SR/v3/recording_20260313_133316.zip unito@HPZ2miniDistriMuSe:
-cd /home/unito/distrimuse
-mkdir -p bags
-unzip recording_20260313_133316.zip -d bags
-find /home/unito/advis/bags/recording_20260313_133316 -maxdepth 2 -type f
-```
-
-
-
-**Check if OPen CV works**
+# 6. Verify OpenCV Display
 
 ```bash
-# or
-
-## check if the display for images is working
-pixi run python -c "import cv2, numpy as np; img=np.zeros((300,300,3)); cv2.imshow('test', img); cv2.waitKey(0)"
+pixi run python -c "
+import cv2, numpy as np;
+img=np.zeros((300,300,3));
+cv2.imshow('test', img);
+cv2.waitKey(0)"
 ```
+
+---
+
+# 7. Save Frames Script Setup
+
+Copy helper script:
 
 ```bash
-cp ~/advis/advis_distrimuse_unito_SR/scripts/pixi_save_frames.py ~/advis/distrimuse-image-broadcaster
+cp ~/advis/advis_distrimuse_unito_SR/scripts/pixi_save_frames.py \
+~/advis/distrimuse-image-broadcaster
 ```
 
+Or create manually:
 
-
-follow script or create to save_frames
 ```bash
 nano pixi_save_frames.py
 ```
 
+---
 
-
-1️⃣  Custom save directory + one camera
-
-```bash
-pixi run python pixi_save_frames.py --ros-args -p save_dir:=/home/unito/advis/back_frames -p topics:="['/camera/back_view/image_raw']"
-```
-
-3️⃣ Multiple cameras 🔥
+## 7.1 Save Single Camera Frames
 
 ```bash
-pixi run python pixi_save_frames.py --ros-args -p save_dir:=/home/unito/advis/all_frames -p topics:="['/camera/front_view/image_raw','/camera/back_view/image_raw','/camera/side_view/image_raw']"
-
+pixi run python pixi_save_frames.py \
+--ros-args \
+-p save_dir:=/home/unito/advis/back_frames \
+-p topics:="['/camera/back_view/image_raw']"
 ```
 
+---
 
-
+## 7.2 Save Multiple Camera Frames
 
 ```bash
-# Verify saved frames
-ls /home/unito/advis/back_frames | head 
+pixi run python pixi_save_frames.py \
+--ros-args \
+-p save_dir:=/home/unito/advis/all_frames \
+-p topics:="[
+'/camera/front_view/image_raw',
+'/camera/back_view/image_raw',
+'/camera/side_view/image_raw'
+]"
 ```
 
+---
+
+## 7.3 Verify Saved Frames
+
+```bash
+ls /home/unito/advis/back_frames | head
+```
+
+---
+
+# 8. Setup Image Streaming
 
 
 
-### 1.2 Setup Image Streaming
+## Install Pixi
 
-a) Install Pixi first,
 ```bash
 curl -fsSL https://pixi.sh/install.sh | sh
 ```
-> Follow [this page](https://pixi.prefix.dev/latest/#installation) to setup and check if Pixi is working. 
 
-b) use Smart Robotics Repo,
+More details:
+
+https://pixi.prefix.dev/latest/#installation
+
+---
+
+## Clone Smart Robotics Broadcaster Repo
 
 ```bash
 git clone https://github.com/smart-robotics/distrimuse-image-broadcaster
+
 cd ~/advis/distrimuse-image-broadcaster
+
 pixi install
+
 cp config/config.yaml.example config/config.yaml
-cp ~/advis/advis_distrimuse_unito_SR/scripts/pixi_save_frames.py ~/advis/distrimuse-image-broadcaster
+
+# cp ~/advis/advis_distrimuse_unito_SR/scripts/pixi_save_frames.py .
 ```
 
+---
 
+# 9. Setup Pixi Environment in ADVIS
 
-
-
-### RUN IN ADVIS
-Either 
- - 1. Initiate new Pixi env
+## Option A — Create New Pixi Environment
 
 ```bash
 pixi init
+
 pixi add \
-  python=3.12 \
-  ros-jazzy-rclpy \
-  ros-jazzy-sensor-msgs \
-  ros-jazzy-std-msgs    \
-  ros-jazzy-cv-bridge \
-  opencv \
-  numpy
+python=3.12 \
+ros-jazzy-rclpy \
+ros-jazzy-sensor-msgs \
+ros-jazzy-std-msgs \
+ros-jazzy-cv-bridge \
+opencv \
+numpy
 ```
-Or
--2 Install from TOML file
+
+---
+
+## Option B — Install from TOML
 
 ```bash
-# Step 2 — Add ROS2 + dependencies
-cd ~/advis/advis_advis_distrimuse_unito_SR
-# rm -rf .pixi
+cd ~/advis/advis_distrimuse_unito_SR
+
 pixi install
-# Step 1 — Create Pixi env inside ADVIS repo
 ```
 
-### test ROS Installation
+---
+
+# 10. Verify ROS Installation
 
 ```bash
-pixi run python -c "import rclpy; from sensor_msgs.msg import Image; print('ROS OK')"
+pixi run python -c "
+import rclpy;
+from sensor_msgs.msg import Image;
+print('ROS OK')"
 ```
 
-** CHeck GPU Setup with PIXI
+---
+
+# 11. Verify GPU Setup
 
 ```bash
-pixi run python -c "import torch; print(torch.__version__); print(torch.version.cuda); print(torch.cuda.is_available()); print(torch.cuda.device_count())"
+pixi run python -c "
+import torch;
+print(torch.__version__);
+print(torch.version.cuda);
+print(torch.cuda.is_available());
+print(torch.cuda.device_count())"
+```
+
+```bash
 nvidia-smi
 ```
 
 
 
-### COPY DATA
+
+## RECEIVE DATA LIVE AND SAVE FOR TRANING:
+
+1. Stream Frames
+    ```bash
+    cd ~/advis/distrimuse-image-broadcaster
+    pixi run replay /home/unito/advis/bags/recording_20260313_133316/ --no-display --loop
+    ```
+1. Verify Received frames
+    ```bash
+    pixi run ros2 topic list | grep camera
+    pixi run ros2 topic hz /camera/back_view/image_raw
+    ```
+2.  Crop. resize, save after pre-processing
+      ```bash
+      pixi run python scripts/pixi/pixi_flow.py   \
+    --ros-args   -p save_dir:=/home/unito/advis/DS/SR/v3/train_processed/back_view \
+    -p camera_topic:=/camera/back_view/image_raw    \
+    -p area_names:="['ConvBelt','PLeft','PRight','RoboArm']"    \
+    -p static_mask_paths:="['/home/unito/advis/DS/SR/v2/masks/Mask Generation_ConvBelt_MASK.png','/home/unito/advis/DS/SR/v2/masks/Mask Generation_PLeft_MASK.png','/home/unito/advis/DS/SR/v2/masks/Mask Generation_PRight_MASK.png','/home/unito/advis/DS/SR/v2/masks/Mask Generation_RoboArm_MASK.png']" \
+    -p save_every_n:=5  \
+    -p image_format:=png    \
+    -p keep_aspect:=true    \
+    -p save_masked_full:=false  \
+    -p save_masked_input:=false
+    ```
+3. verify preprocessed frames
+    ```bash
+    ls /home/unito/advis/DS/SR/v2/train_processed/back_view/masked_input -l | egrep -c '^-'
+    ls /home/unito/advis/DS/SR/v2/train_processed/back_view/ConvBelt -l | egrep -c '^-'
+    ```
+
+---
+
+## INFERENCE FROM LIVE
+
+1. Stream Frames
+    ```bash
+    cd ~/advis/distrimuse-image-broadcaster
+    pixi run replay /home/unito/advis/bags/recording_20260313_133316/ --no-display --loop
+    ```
+2. Verify Received frames
+  - Open another terminal and verify
+    ```bash
+    cd ~/advis/distrimuse-image-broadcaster
+    pixi run ros2 topic list | grep camera
+    pixi run ros2 topic hz /camera/back_view/image_raw
+    ```
+3. Run Inference
+    ```bash
+    pixi run python scripts/infer_ros_live.py   --camera_topic /camera/back_view/image_raw   --safety_area ALL   --area_names RoboArm ConvBelt PLeft PRight   --static_mask_paths     /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_RoboArm_MASK.png     /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_ConvBelt_MASK.png     /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_PLeft_MASK.png     /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_PRight_MASK.png   --threshold_dir /home/unito/advis/advis_distrimuse_unito_SR/scripts/results/thresholds   --checkpoints /home/unito/advis/advis_distrimuse_unito_SR/scripts/checkpoints_33   --latent_dims 64   --frame_stride 1   --verbose_level 2   --log_every_n 1
+    
+    ```
+
+
+
+# 12. Upload Additional Files
+
+Example:
 
 ```bash
-# upload masks
-scp -P 10022 "/Users/rashid/Mask Generation_PRight_MASK.png" \
+scp -P 10022 \
+"/Users/rashid/Mask Generation_PRight_MASK.png" \
 unito@distrimuse.idrago.org:/home/unito/advis/DS/SR/v2/
 ```
 
+---
+
+# 13. Count Dataset Files
+
+```bash
+ls /home/unito/advis/DS/SR/v2/train_processed/back_view/masked_input -l | egrep -c '^-'
+
+ls /home/unito/advis/DS/SR/v2/train_processed/back_view/ConvBelt -l | egrep -c '^-'
+```
+
+---
+
+# 14. Pipeline Overview
+
+```text
+Raw Video → Preprocessing → Training → Threshold Calibration → Inference
+```
+
+| Stage | Script | Description |
+|-------|-------|------------|
+| Preprocess | — | Crop safety areas from raw video and resize to 128×128 |
+| Train | `scripts/train.py` | Train autoencoder/VAE model |
+| Compute Threshold | `scripts/compute_threshold.py` | Estimate thresholds from validation |
+| Calibrate Threshold | `scripts/calibrate_threshold.py` | Tune thresholds |
+| Inference | `scripts/inference.py` | Run anomaly detection |
+
+---
+
+# 15. Alternative Installation via Conda
+
+```bash
+git clone https://github.com/rashidrao-pk/advis_distrimuse_unito_SR
+
+conda activate dm_unito
+
+pip install -r requirements.txt
+```
+
+---
+
+# 16. Retrieve Model Checkpoints
+
+Model checkpoints are hosted on GitLab:
+
+https://gitlab.di.unito.it/rashid/dm_checkpoints_demo33
+
+---
+
+## Download Demo 3.3 Checkpoints
+
+```bash
+cd ~/advis/advis_distrimuse_unito_SR/scripts
+
+git init
+
+git pull https://gitlab.di.unito.it/rashid/dm_checkpoints_demo33
+```
+
+These checkpoints correspond to:
+
+- **Real Robot Palletizing Dataset**
+- **UC3 / DEMO-3.3**
+- Provided by **Smart Robotics, Netherlands**
+
+---
+
+
+
+
+---- 
+OLD README
+---
+===
+
+
+
+# DistriMuSe-UC3
+
+> **University of Torino** — Distributed Multi-Sensor Systems for Human Safety and Health
+
+---
+
+## Use Case 3 · Safe Interaction with Robots
+
+An anomaly detection pipeline based on variational autoencoder models that monitors industrial safety areas in real time. The system processes video input, trains per-area models, calibrates detection thresholds, and runs inference on live or recorded footage.
+
+
+
+## Smart Robotics Libraries for Sending and Receiving Data:
+
+`distrimuse-image-broadcaster` will be used to broadcast and `distrimuse-ros2-api` will be used to receive the message back.
+
+
+
+  - https://github.com/smart-robotics/distrimuse-image-broadcaster
+  - https://github.com/smart-robotics/distrimuse-ros2-api
+
+- INSTALL ROS2 in ADVIS
+
+```bash
+mkdir -p ~/ros2_ws/src
+
+cd ~/ros2_ws/src
+
+git clone https://github.com/smart-robotics/distrimuse-ros2-api.git
+
+cd ~/ros2_ws
+
+sudo apt install colcon
+
+colcon build
+```
+#### ROS2
+ **_Rulex/UniTo_**
+
+
+## 1. Setup
+
+**Connect to remote device**
+
+```bash
+ssh -X unito@distrimuse
+```
+
+## START BROADCAST from  TERMINAL (having pixi setup)
+
+Make sure that PIXI is installed and fully setup (otherwise follow [this article](README_FIRST_TIME.MD))
+
+```bash
+cd ~/advis/distrimuse-image-broadcaster
+export ROS_LOCALHOST_ONLY=1
+export ROS_DOMAIN_ID=0
+export RMW_IMPLEMENTATION=rmw_fastrtps_cpp
+
+# Verify Frames
+pixi run ros2 bag info /home/unito/advis/bags/recording_20260313_133316
+## Replay from last pre-recorded
+pixi run replay /home/unito/advis/bags/recording_20260313_133316/ --no-display --loop
+```
+### Save Frames from Broadcast 
+### 1.3 Replay or Save frames
+
+and run following command to `Save` frames
+
+```bash
+pixi run python scripts/pixi/pixi_flow.py   \
+    --ros-args   -p save_dir:=/home/unito/advis/DS/SR/v3/train_processed/back_view \
+    -p camera_topic:=/camera/back_view/image_raw    \
+    -p area_names:="['ConvBelt','PLeft','PRight','RoboArm']"    \
+    -p static_mask_paths:="['/home/unito/advis/DS/SR/v2/masks/Mask Generation_ConvBelt_MASK.png','/home/unito/advis/DS/SR/v2/masks/Mask Generation_PLeft_MASK.png','/home/unito/advis/DS/SR/v2/masks/Mask Generation_PRight_MASK.png','/home/unito/advis/DS/SR/v2/masks/Mask Generation_RoboArm_MASK.png']" \
+    -p save_every_n:=5  \
+    -p image_format:=png    \
+    -p keep_aspect:=true    \
+    -p save_masked_full:=false  \
+    -p save_masked_input:=false
+```
+
+
+### 1.1 Repo 
+
+```bash
+cd ~/advis/
+cd ~/advis/advis_distrimuse_unito_SR
+```
+
+### Verify Models
+
+
+### TRAINING ON MODELS AGAIN OLD DATA
+It will train models on OLD Data `v2` and its (_cleaned version_) called `refined` for `200` epochs
+
+- **_Clean the exitisting model first?_**
+
+```bash
+pixi run python scripts/flush_data.py \
+  --safety_area ALL \
+  --latent_dims 64 \
+  --checkpoints /home/unito/advis/advis_distrimuse_unito_SR/scripts/results/models_v2 \
+  --threshold_dir /home/unito/advis/advis_distrimuse_unito_SR/scripts/results/thresholds \
+  --dry_run
+```
+
+/home/unito/advis/advis_distrimuse_unito_SR/scripts/results/models_v2
+```bash
+python scripts/train.py \
+   --safety_area ALL   \
+   --dataset_source SR   \
+   --dataset_version v2   \
+   --dataset_cam_type refined   \
+   --epochs 200   \
+   --batch_size 16   \
+   --latent_dims 64   \
+   --augmentation_type custom
+   --save_figures
+   --verbose_level 1
+
+```
+
+
+### TRAIN USING NEW DATA THROGH ROS
+
+```bash
+python scripts/train.py \
+  --safety_area PLeft \
+  --dataset_source SR \
+  --dataset_version v3 \
+  --dataset_cam_type back_view \
+  --epochs 200 \
+  --batch_size 16 \
+  --latent_dims 64 \
+  --augmentation_type custom
+```
+
+
+
+
+### Setup ADVIS using PIXI (RUN IN ADVIS)
+
+**1. Install Pixi env**
+This line will use [pixi.toml](pixi.toml) file and will install its dependencies.
+
+```bash
+cd ~/advis/advis_distrimuse_unito_SR
+pixi install
+```
+
+**2. test ROS Installation**
+
+```bash
+pixi run python -c "import rclpy; from sensor_msgs.msg import Image; print('ROS OK')"
+```
+
+Saved folders should be like this
+
+```text
+train_processed/
+/home/unito/advis/DS/SR/v2/back_camera/
+├── masked_input/
+│   ├── masked_input_2026....png
+│   ├── masked_input_2026....png
+│   └── ...
+├── ConvBelt/
+├── PLeft/
+├── PRight/
+└── RoboArm/
+```
+
+## FULL SETUP FROM Image Broadcast 
+
+### Step 1 - OFFLINE TRANING - Receive data and save frames for training
+
+#### Step 1.1 - OFFLINE TRANING - Frame conversion, masking, resizing and saving to disk.
+
+```bash
+cd ~/advis/distrimuse-image-broadcaster
+
+pixi run python scripts/pixi/pixi_saveframes.py \
+  --ros-args \
+  -p save_dir:=/home/unito/advis/DS/SR/v3/back_view/train \
+  -p camera_topic:=/camera/back_view/image_raw \
+  -p area_names:="['ConvBelt','PLeft','PRight','RoboArm']" \
+  -p static_mask_paths:="['/home/unito/advis/DS/SR/v2/masks/Mask Generation_ConvBelt_MASK.png','/home/unito/advis/DS/SR/v2/masks/Mask Generation_PLeft_MASK.png','/home/unito/advis/DS/SR/v2/masks/Mask Generation_PRight_MASK.png','/home/unito/advis/DS/SR/v2/masks/Mask Generation_RoboArm_MASK.png']" \
+  -p save_every_n:=1 \
+  -p image_format:=png \
+  -p keep_aspect:=true \
+  -p save_masked_full:=false \
+  -p save_masked_input:=true \
+  -p masked_input_subdir:=masked_input \
+  -p masked_input_blur_ksize:=31 \
+  -p masked_input_dim_factor:=0.35 \
+  -p masked_input_outline_thickness:=6
+
+```
+
+#### 1.2 - OFFLINE TRANING - load preprocessed data and train models
+
+- `Train` for `One - Pallet Right` Safety Area:
+
+  ```bash
+  python scripts/train.py \
+    --safety_area PRight --dataset_source SR \
+    --dataset_version v3 --dataset_cam_type back_view \
+    --epochs 200 --batch_size 16 --latent_dims 64 \
+    --augmentation_type custom
+  ```
+
+
+- `TRAIN` FOR `ALL` safety areas 
+    ```bash
+    python scripts/train.py \
+      --safety_area ALL \
+      --dataset_source SR \
+      --dataset_version v3 \
+      --dataset_cam_type back_view \
+      --epochs 20 \
+      --batch_size 16 \
+      --latent_dims 64 \
+      --augmentation_type custom
+    ```
+
+### Step 2 - Threshold Calibration
+
+`Calibrate Threshold` using `Validation` Set using rest of the `20%` data from training.
+
+- For `one - Pallet Right` Safety Area
+  ```bash
+  # NEW MODEL
+  python scripts/calibrate_threshold.py --mode val --safety_area PRight --dataset_version v3 --dataset_type back_view --checkpoints scripts/results
+  ```
+- For `ALL` Safety Area
+  ```bash
+  python scripts/calibrate_threshold.py --mode val --safety_area ALL --dataset_version v3 --dataset_type back_view --checkpoints scripts/results
+
+  ```
+
+
+### Step 3 - Live Inference
+
+
+- **CHECK GPU BEFORE INFerence**
+
+  ```python
+  cd ~/advis/advis_distrimuse_unito_SR
+  pixi run python -c "import torch; print(torch.__version__); print(torch.version.cuda); print(torch.cuda.is_available()); print(torch.cuda.device_count())"
+  #nvidia-smi
+  ```
+
+**Verify Inference Setup**
+
+```bash
+pixi run python -c "import torch; print(torch.__version__)"
+pixi run python -c "import rclpy; print('ROS OK')"
+pixi run python -c "import cv2; print('CV OK')"
+```
+
+- Verify topics in from Image-Broadcast 
+
+  ```python
+    cd ~/advis/distrimuse-image-broadcaster
+    # verify topic
+    pixi run ros2 topic list | grep camera
+    ## Verify frame for camera acngle
+    pixi run ros2 topic hz /camera/back_view/image_raw
+  ```
+
+<!-- /home/unito/advis/advis_distrimuse_unito_SR/scripts/results/models -->
+<!-- /home/unito/advis/advis_distrimuse_unito_SR/scripts/results/threshold/RoboArm/threshold_RoboArm.json
+<!-- /home/unito/advis/advis_distrimuse_unito_SR/scripts/results/thresholds/RoboArm/threshold_RoboArm.json -->
 
 
 ```bash
-# COUNT NUMBER OF FILES
-ls /home/unito/advis/DS/SR/v2/train_processed/back_view/masked_input -l . | egrep -c '^-'
-ls /home/unito/advis/DS/SR/v2/train_processed/back_view/ConvBelt -l . | egrep -c '^-'
-ls /home/unito/advis/DS/SR/v2/train_processed/back_view/ConvBelt -l . | egrep -c '^-'
-ls /home/unito/advis/DS/SR/v2/train_processed/back_view/ConvBelt -l . | egrep -c '^-'
+pixi run python scripts/infer_ros_live.py \
+--camera_topic /camera/back_view/image_raw   \
+--safety_area ALL   \
+--static_mask_paths   /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_RoboArm_MASK.png   /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_ConvBelt_MASK.png   /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_PLeft_MASK.png   /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_PRight_MASK.png \
+--threshold_dir /home/unito/advis/advis_distrimuse_unito_SR/scripts/results/threshold   \
+--checkpoints ../advis_distrimuse_unito_SR/scripts/results/models   \
+--latent_dims 64   \
+--frame_stride 5
+# ---------
+
+pixi run python scripts/infer_ros_live.py \
+  --camera_topic /camera/back_view/image_raw \
+  --safety_area ALL \
+  --area_names RoboArm ConvBelt PLeft PRight \
+  --static_mask_paths \
+    /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_RoboArm_MASK.png \
+    /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_ConvBelt_MASK.png \
+    /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_PLeft_MASK.png \
+    /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_PRight_MASK.png \
+  --threshold_dir /home/unito/advis/advis_distrimuse_unito_SR/scripts/results/thresholds \
+  --checkpoints /home/unito/advis/advis_distrimuse_unito_SR/scripts/results/models \
+  --latent_dims 64 \
+  --frame_stride 1 \
+  --verbose_level 3 \
+  --log_every_n 1
+
+
+
+
+pixi run python scripts/infer_ros_live.py \
+  --camera_topic /camera/back_view/image_raw \
+  --safety_area ALL \
+  --area_names RoboArm ConvBelt PLeft PRight \
+  --static_mask_paths \
+    /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_RoboArm_MASK.png \
+    /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_ConvBelt_MASK.png \
+    /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_PLeft_MASK.png \
+    /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_PRight_MASK.png \
+  --threshold_dir /home/unito/advis/advis_distrimuse_unito_SR/scripts/results/thresholds \
+  --checkpoints /home/unito/advis/advis_distrimuse_unito_SR/scripts/results/models \
+  --latent_dims 64 \
+  --frame_stride 1 \
+  --verbose_level 3 \
+  --log_every_n 1
 ```
 
+
+### RUN INFERENCE ON MODEL-SR-V2
+it will load models checkpoint from `scripts/checkpoints_33` 
+
+
+
+```bash
+pixi run python scripts/infer_ros_live.py   --camera_topic /camera/back_view/image_raw   --safety_area ALL   --area_names RoboArm ConvBelt PLeft PRight   --static_mask_paths     /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_RoboArm_MASK.png     /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_ConvBelt_MASK.png     /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_PLeft_MASK.png     /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_PRight_MASK.png   --threshold_dir /home/unito/advis/advis_distrimuse_unito_SR/scripts/results/thresholds   --checkpoints /home/unito/advis/advis_distrimuse_unito_SR/scripts/checkpoints_33   --latent_dims 64   --frame_stride 1   --verbose_level 2   --log_every_n 1
+```
+
+
+```bash
+pixi run python scripts/infer_ros_live_GUI.py \
+  --camera_topic /camera/back_view/image_raw \
+  --safety_area ALL \
+  --area_names RoboArm ConvBelt PLeft PRight \
+  --static_mask_paths \
+    /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_RoboArm_MASK.png \
+    /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_ConvBelt_MASK.png \
+    /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_PLeft_MASK.png \
+    /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_PRight_MASK.png \
+  --threshold_dir /home/unito/advis/advis_distrimuse_unito_SR/scripts/results/thresholds \
+  --checkpoints /home/unito/advis/advis_distrimuse_unito_SR/scripts/results/models \
+  --latent_dims 64 \
+  --frame_stride 1 \
+  --verbose_level 1 \
+  --log_every_n 10 \
+  --process_period 0.02 \
+  --show_timeline
+
+```
+
+**_RESPONSE_**
+
+```bash
+pixi run python scripts/infer_ros_live_MSG.py \
+  --camera_topic /camera/back_view/image_raw \
+  --safety_area ALL \
+  --area_names RoboArm ConvBelt PLeft PRight \
+  --static_mask_paths \
+    /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_RoboArm_MASK.png \
+    /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_ConvBelt_MASK.png \
+    /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_PLeft_MASK.png \
+    /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_PRight_MASK.png \
+  --threshold_dir /home/unito/advis/advis_distrimuse_unito_SR/scripts/results/thresholds \
+  --checkpoints /home/unito/advis/advis_distrimuse_unito_SR/scripts/results/models \
+  --latent_dims 64 \
+  --frame_stride 1 \
+  --process_period 0.02 \
+  --publish_rulex \
+  --rulex_topic /rulex/detection_result
+```
+
+
+```bash
+python scripts/inference.py \
+    --data_source raw \
+    --input_dir /advis/frames \
+    --safety_area PLeft \
+    --threshold_dir scripts/results/threshold \
+    --save_figures
+```
+
+```bash
+# COUNT NUMBER OF FILES
+ls /home/unito/advis/DS/SR/v3/train/back_view/masked_input -l . | egrep -c '^-'
+ls /home/unito/advis/DS/SR/v3/train/back_view/ConvBelt -l . | egrep -c '^-'
+ls /home/unito/advis/DS/SR/v3/train/back_view/ConvBelt -l . | egrep -c '^-'
+ls /home/unito/advis/DS/SR/v3/train/back_view/ConvBelt -l . | egrep -c '^-'
+```
 
 
 ## Pipeline Overview
@@ -232,34 +840,694 @@ Raw Video → Preprocessing → Training → Threshold Calibration → Inference
 
 ---
 
+## Safety Areas
+
+| ID | Description |
+|---|---|
+| `RoboArm` | Robot arm zone |
+| `ConvBelt` | Conveyor belt zone |
+| `PLeft` | Personnel zone — left |
+| `PRight` | Personnel zone — right |
+| `ALL` | Run all areas sequentially |
+
+---
+
+## ⚙️ 1. Setup
+### 1.1 Create environment
 
 
+```bash
+conda create -n dm_unito python==3.9.18
+conda activate dm_unito
+conda install pytorch torchvision torchaudio pytorch-cuda=11.8 -c pytorch -c nvidia
 
-
+```
 
 ### 1.2 Clone GitHub Repo
 
 ```bash
-git clone https://github.com/rashidrao-pk/advis_distrimuse_unito_SR
 conda activate dm_unito
-pip install -r requirments.txt
 ```
 
 
 
+---
 
-### 1.3 Retreive Model Checkpoints (Demo 3.3)
-Model Checkpoints are seperately provided and are available at following GitLab repo
+## 2. Train
 
--   [https://GitLab.di.unito.it/rashid/**_`dm_checkpoints_demo33`_**](https://gitlab.di.unito.it/rashid/dm_checkpoints_demo33)
+Train an `VAE-GAN` model on one (`PLeft`, `PRight`, `RoboArm`, `ConvBelt`) or all safety areas.
 
-
-#### Demo 3.3
-
-Download Model checkpoints uploaded on following `GitLab` repo for `Real Palletizing` dataset for UC3 ( dataset provided by `Smart Robotics`, Netherlands for `DEMO-3.3` of UC3):
 ```bash
-cd ~/advis/advis_distrimuse_unito_SR/scripts
-git init
-git pull https://gitlab.di.unito.it/rashid/dm_checkpoints_demo33    # FOR REAL ROBOT Palletizing - DEMO 3.3
-cd ..
+# Single area (default settings)
+python scripts/train.py --safety_area RoboArm
 ```
+
+```bash
+# All areas sequentially
+python scripts/train.py --safety_area ALL
+```
+
+```bash
+# All areas with custom settings
+python scripts/train.py --safety_area ALL --epochs 200 --batch_size 64
+```
+
+**Full argument reference**
+
+| Argument | Type | Default | Description |
+|---|---|---|---|
+| `--safety_area` | `str` | `RoboArm` | Area to train (`RoboArm`, `ConvBelt`, `PLeft`, `PRight`, `ALL`) |
+| `--epochs` | `int` | `1000` | Number of training epochs |
+| `--batch_size` | `int` | `64` | Batch size (set automatically based on device if omitted) |
+| `--data_split` | `int` | `80` | Train/validation split percentage (remainder used for validation) |
+| `--augmentation_level` | `int` | `0` | `0` = none, `1` = custom augmentation |
+| `--verbose_level` | `int` | `0` | `0` = silent, `1` = standard, `2` = detailed |
+| `--save_figures` | flag | off | Save reconstruction plots, learning curves, and latent space visualisations |
+
+### 2.1 Train with allow/ignore Intermediate Results
+
+This will allow to train VAE-GAN models to allow/ignore intermediate results/figures to store.
+
+
+```bash
+# Fast mode — saves curves and checkpoints only
+python scripts/train.py --safety_area RoboArm
+```
+
+```bash
+# Full mode — also saves reconstruction figures
+python scripts/train.py --safety_area RoboArm --save_figures
+```
+
+---
+
+## 3. Compute/Calibrate Threshold
+
+### 3.1 Compute Threshold with Validation-set (Subset of Train-set)
+- Estimate per-area anomaly `thresholds` from `reconstruction errors` on the `validation` set (ratio used as `80/20`).
+
+```bash
+# Validation mode — no labels required
+python scripts/calibrate_threshold.py --mode val --safety_area ALL --dataset_version v3 --dataset_type back_view
+
+python scripts/calibrate_threshold.py --mode val --safety_area ALL --dataset_version v3 --dataset_type back_view
+```
+
+or 
+### 3.2 Compute Threshold with Test-set
+- Calibrate `thresholds` using labelled test set (containing both `normal` and `anomalous` data).
+
+```bash
+# Test mode — labelled CSV required
+python scripts/calibrate_threshold.py --mode test --safety_area ALL \
+    --gt_csv scripts/advis/annotations/anom_metadata_unexpected_person.csv
+```
+
+```bash
+# Test mode — tune monitoring metric and search grid
+python scripts/calibrate_threshold.py --mode test --safety_area RoboArm --gt_csv scripts/data/annotations/anom_metadata_unexpected_person.csv --monitor_score recall --offset_ls 1,2,3 --sigma_ls 0.0,0.5,1.0,1.5
+```
+
+---
+
+## 4. Inference
+
+Run anomaly detection from multiple `input sources` inluding following input sources;
+
+
+### 4.1 Data source options
+
+| `--data_source` | Input | Notes |
+|---|---|---|
+| `preprocessed` | Pre-cropped image folder | Fastest; requires prior preprocessing |
+| `raw` | Raw frame folder | Crops and resizes on the fly |
+| `video` | `.avi` / video file | Supports `--max_frames` limit |
+| `ipcam` | RTSP stream URL | For live camera feeds |
+
+
+### 4.2 Scripts:
+```bash
+# Pre-cropped frames, evaluate against annotations
+python scripts/inference.py --data_source preprocessed --input_dir /home/unito/advis/DS/ValeriaLab/V6/fronttop/test_processed/unexpected_person --safety_area RoboArm --gt_csv scripts/data/annotations.csv
+```
+
+```bash
+# Raw video frames, all areas, save output figures
+python scripts/inference.py \
+    --data_source raw \
+    --input_dir /advis/frames \
+    --safety_area PLeft \
+    --save_figures
+```
+
+```bash
+# Video file, process first 500 frames
+python scripts/inference.py \
+    --data_source video \
+    --input_video /advis/test.avi \
+    --max_frames 500
+```
+
+```bash
+# Live IP camera stream, all areas
+python scripts/inference.py \
+    --data_source ipcam \
+    --camera_url rtsp://192.168.1.10/stream \
+    --safety_area ALL \
+    --save_figures
+```
+
+
+
+---
+
+## Repository Structure
+
+```
+distrimuse_unito/
+├── scripts/
+│   ├── train.py
+│   ├── compute_threshold.py
+│   ├── calibrate_threshold.py
+│   ├── inference.py
+│   └── results/                # Figures and threshold files
+│       └── models/             # Saved model weights
+│       └── threshold/          # Saved model weights
+│       └── training/           # Saved Learning Curves
+│   └── data/
+│       └── annotations/
+
+└── README.md
+```
+
+---
+
+## Acknowledgements
+
+Developed at the **University of Torino** as part of the [**_DistriMuse_**](https://distrimuse.eu/) project on distributed multi-sensor systems for human safety and health.
+
+
+
+
+------------------------
+
+# DistriMuSe-UC3
+
+> **University of Torino**  
+> Distributed Multi-Sensor Systems for Human Safety and Health
+
+---
+
+# Use Case 3 — Safe Interaction with Robots
+
+A **real-time anomaly detection pipeline** based on **VAE/VAE-GAN models** for monitoring industrial safety areas in collaborative robotics environments.
+
+The system supports:
+
+- Video preprocessing and masking  
+- Safety-area specific model training  
+- Threshold calibration  
+- Live ROS-based inference  
+- Rulex/ROS message publishing  
+
+---
+
+# Pipeline Overview
+
+```text
+Raw Video / ROS Stream
+        ↓
+Frame Extraction + Masking
+        ↓
+Safety Area Cropping / Resize
+        ↓
+VAE-GAN Training
+        ↓
+Threshold Calibration
+        ↓
+Live Inference / Alert Publishing
+```
+
+---
+
+# Safety Areas
+
+| ID | Description |
+|---|---|
+| `RoboArm` | Robot arm zone |
+| `ConvBelt` | Conveyor belt zone |
+| `PLeft` | Personnel left zone |
+| `PRight` | Personnel right zone |
+| `ALL` | All safety areas |
+
+---
+
+# Smart Robotics ROS Libraries
+
+Used for ROS2 communication:
+
+| Library | Purpose |
+|---|---|
+| `distrimuse-image-broadcaster` | Broadcast camera/image stream |
+| `distrimuse-ros2-api` | Receive ROS detection messages |
+
+Repositories:
+
+- https://github.com/smart-robotics/distrimuse-image-broadcaster
+- https://github.com/smart-robotics/distrimuse-ros2-api
+
+---
+
+# 1. Setup Environment
+
+## Connect to Remote Device
+
+```bash
+ssh -X unito@distrimuse
+```
+
+---
+
+## Install Pixi Environment
+
+```bash
+cd ~/advis/advis_distrimuse_unito_SR
+pixi install
+```
+
+---
+
+## Verify Installation
+
+```bash
+pixi run python -c "import rclpy; print('ROS OK')"
+pixi run python -c "import cv2; print('CV OK')"
+pixi run python -c "import torch; print(torch.cuda.is_available())"
+```
+
+---
+
+# 2. ROS2 Installation
+
+<details>
+<summary><strong>📦 Expand ROS2 Installation</strong></summary>
+
+```bash
+mkdir -p ~/ros2_ws/src
+
+cd ~/ros2_ws/src
+
+git clone https://github.com/smart-robotics/distrimuse-ros2-api.git
+
+cd ~/ros2_ws
+
+sudo apt install colcon
+
+colcon build
+```
+
+</details>
+
+---
+
+# 3. Broadcast Image Stream
+
+<details>
+<summary><strong>📡 Expand Broadcast Commands</strong></summary>
+
+```bash
+cd ~/advis/distrimuse-image-broadcaster
+
+export ROS_LOCALHOST_ONLY=1
+export ROS_DOMAIN_ID=0
+export RMW_IMPLEMENTATION=rmw_fastrtps_cpp
+```
+
+### Verify Bag
+
+```bash
+pixi run ros2 bag info /home/unito/advis/bags/recording_20260313_133316
+```
+
+### Replay Bag
+
+```bash
+pixi run replay /home/unito/advis/bags/recording_20260313_133316/ \
+--no-display \
+--loop
+```
+
+</details>
+
+---
+
+# 4. Save Frames from ROS Broadcast - If Needed for Training Again
+
+<details>
+<summary><strong>🖼 Expand Save Frame Commands</strong></summary>
+
+1. Verify Sensor Broadcast
+    ```bash
+    cd ~/advis/distrimuse-image-broadcaster
+    pixi run ros2 topic list | grep camera
+    pixi run ros2 topic hz /camera/back_view/image_raw
+    ```
+2. Save Frames
+    ```bash
+    pixi run python scripts/pixi/pixi_flow.py \
+    --ros-args \
+    -p save_dir:=/home/unito/advis/DS/SR/v3/train_processed/back_view \
+    -p camera_topic:=/camera/back_view/image_raw \
+    -p area_names:="['ConvBelt','PLeft','PRight','RoboArm']" \
+    -p static_mask_paths:="[
+    '/home/unito/advis/DS/SR/v2/masks/Mask Generation_ConvBelt_MASK.png',
+    '/home/unito/advis/DS/SR/v2/masks/Mask Generation_PLeft_MASK.png',
+    '/home/unito/advis/DS/SR/v2/masks/Mask Generation_PRight_MASK.png',
+    '/home/unito/advis/DS/SR/v2/masks/Mask Generation_RoboArm_MASK.png'
+    ]" \
+    -p save_every_n:=5 \
+    -p image_format:=png
+    ```
+
+</details>
+
+---
+
+# 5. Training Models
+
+---
+
+## Flush Existing Models
+
+```bash
+pixi run python scripts/flush_data.py \
+--safety_area ALL \
+--latent_dims 64 \
+--dry_run
+```
+
+---
+
+## Train on Old Dataset (v2)
+
+```bash
+conda activate dm_unito
+cd ~/advis/advis_distrimuse_unito_SR
+python scripts/train.py \
+--safety_area ALL \
+--dataset_source SR \
+--dataset_version v2 \
+--dataset_cam_type refined \
+--epochs 200 \
+--batch_size 16 \
+--latent_dims 64 \
+--augmentation_type custom \
+--save_figures
+```
+
+---
+
+## Train on New ROS Dataset (v3)
+
+```bash
+python scripts/train.py \
+--safety_area ALL \
+--dataset_source SR \
+--dataset_version v3 \
+--dataset_cam_type back_view \
+--epochs 200 \
+--batch_size 16 \
+--latent_dims 64 \
+--augmentation_type custom
+```
+
+---
+
+# 6. Threshold Calibration
+
+---
+
+## Validation Threshold Calibration
+
+```bash
+
+conda activate dm_unito
+cd ~/advis/advis_distrimuse_unito_SR
+python scripts/calibrate_threshold.py \
+--mode val \
+--safety_area ALL \
+--dataset_version v2 \
+--dataset_type refined
+```
+
+---
+
+## Test Threshold Calibration
+
+```bash
+python scripts/calibrate_threshold.py \
+--mode test \
+--safety_area ALL \
+--gt_csv scripts/data/annotations.csv
+```
+
+---
+
+# 7. Live ROS Inference
+
+---
+
+## Verify Topics
+
+```bash
+pixi run ros2 topic list | grep camera
+pixi run ros2 topic hz /camera/back_view/image_raw
+```
+
+---
+
+## Run Live Inference
+
+<details>
+<summary><strong>🚀 Expand Inference Command</strong></summary>
+
+```bash
+pixi run python scripts/infer_ros_live.py \
+--camera_topic /camera/back_view/image_raw \
+--safety_area ALL \
+--area_names RoboArm ConvBelt PLeft PRight \
+--static_mask_paths \
+/home/unito/advis/DS/SR/v3/masks/Mask\ Generation_RoboArm_MASK.png \
+/home/unito/advis/DS/SR/v3/masks/Mask\ Generation_ConvBelt_MASK.png \
+/home/unito/advis/DS/SR/v3/masks/Mask\ Generation_PLeft_MASK.png \
+/home/unito/advis/DS/SR/v3/masks/Mask\ Generation_PRight_MASK.png \
+--threshold_dir scripts/results/thresholds \
+--checkpoints scripts/results/models \
+--latent_dims 64 \
+--frame_stride 1
+```
+
+</details>
+
+---
+
+# 8. GUI Inference
+
+
+
+1. New GUI with `timeline` uses **_`--show_timeline`_** param to see in details for whole process
+
+    ```bash
+    pixi run python scripts/infer_ros_live_GUI_v3.py   --camera_topic /camera/back_view/image_raw   --safety_area ALL   --area_names RoboArm ConvBelt PLeft PRight   --static_mask_paths     /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_RoboArm_MASK.png     /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_ConvBelt_MASK.png     /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_PLeft_MASK.png     /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_PRight_MASK.png   --threshold_dir /home/unito/advis/advis_distrimuse_unito_SR/scripts/results/thresholds   --checkpoints /home/unito/advis/advis_distrimuse_unito_SR/scripts/results/models_v2   --latent_dims 64   --frame_stride 1   --verbose_level 1   --log_every_n 10   --process_period 0.02   --show_timeline
+    ```
+
+2. New GUI with `deep analysis` uses **_`--show_model_input`_** param to see detection with `timeline`, and intermediate steps including **_inputs_** for AI detectors, **_reconstructions_**, **_anomaly maps_**, and **_description_** outcomes of detections
+
+
+    ```bash
+    pixi run python scripts/infer_ros_live_GUI_v3.py   --camera_topic /camera/back_view/image_raw   --safety_area ALL   --area_names RoboArm ConvBelt PLeft PRight   --static_mask_paths     /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_RoboArm_MASK.png     /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_ConvBelt_MASK.png     /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_PLeft_MASK.png     /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_PRight_MASK.png   --threshold_dir /home/unito/advis/advis_distrimuse_unito_SR/scripts/results/thresholds   --checkpoints /home/unito/advis/advis_distrimuse_unito_SR/scripts/results/models_v2   --latent_dims 64   --frame_stride 1   --verbose_level 1   --log_every_n 10   --process_period 0.02   --show_timeline --show_model_input
+    ``` 
+
+
+- alias use_ros='source /home/unito/advis/distrimuse-ros2-api/install/setup.bash'
+- use_ros
+
+3. New GUI With `Message Sending`
+  ```bash
+    cd ~/advis/advis_distrimuse_unito_SR
+    source /home/unito/advis/distrimuse-ros2-api/install/setup.bash
+    pixi run python scripts/infer_ros_live_GUI_v4.py \
+      --camera_topic /camera/back_view/image_raw \
+      --rulex_topic /rulex/detection_result \
+      --publish_rulex \
+      --area_names PLeft PRight RoboArm ConvBelt \
+      --static_mask_paths <mask_pleft> <mask_pright> <mask_roboarm> <mask_convbelt> \
+      --threshold_dir <threshold_dir> \
+      --show_timeline \
+      --show_model_input
+  ```
+
+---
+
+# 9. Publish Detection Response to Rulex
+
+1. Publish message
+    ```bash
+    pixi run python scripts/infer_ros_live_MSG.py \
+    --publish_rulex \
+    --rulex_topic /rulex/detection_result
+    ```
+
+<details>
+<summary><strong>🚀 Expand Verify Message</strong></summary>
+    
+```bash
+source /home/unito/advis/distrimuse-ros2-api/install/setup.bash
+pixi run ros2 topic echo /rulex/detection_result
+
+```
+</details>
+
+### Fake DEMO
+1. Run Broadcast in 1 terminal 
+    ```bash
+    cd ~/advis/distrimuse-image-broadcaster
+    pixi run replay /home/unito/advis/bags/recording_20260313_133316/ --no-display --loop
+    ```
+    
+  - <details>
+    <summary><strong>🚀 Expand Verify Sensor Input</strong></summary>
+      
+    ```bash
+    ssh -X unito@distrimuse
+    cd ~/advis/distrimuse-image-broadcaster
+    pixi run ros2 topic list | grep camera
+
+    ```
+    </details>
+
+2. Run `Fake Detection` in 2nd terminal 
+    ```bash
+    cd ~/advis/advis_distrimuse_unito_SR
+    source /home/unito/advis/distrimuse-ros2-api/install/setup.bash
+    pixi run python /home/unito/advis/test/simple_infer_ros.py   --camera_topic /camera/back_view/image_raw   --rulex_topic /rulex/detection_result   --area_names RoboArm ConvBelt PLeft PRight   --mode toggle
+    ```
+  - <details>
+    <summary><strong>🚀 Expand Verify Detection Results</strong></summary>
+      
+    ```bash
+    ssh -X unito@distrimuse
+    cd ~/advis/distrimuse-image-broadcaster
+    source /home/unito/advis/distrimuse-ros2-api/install/setup.bash
+    pixi run ros2 topic echo /rulex/detection_result
+
+    ```
+    </details>
+
+---
+
+
+## Real Demo
+
+1. Run Broadcast in 1 terminal 
+    ```bash
+    cd ~/advis/distrimuse-image-broadcaster
+    pixi run replay /home/unito/advis/bags/recording_20260313_133316/ --no-display --loop
+    ```
+2. Run `Real Detection` in 2nd terminal 
+    ```bash
+    cd ~/advis/advis_distrimuse_unito_SR
+    source /home/unito/advis/distrimuse-ros2-api/install/setup.bash
+    pixi run python scripts/infer_ros_live_GUI_v3.py   --camera_topic /camera/back_view/image_raw   --safety_area ALL   --area_names RoboArm ConvBelt PLeft PRight   --static_mask_paths     /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_RoboArm_MASK.png     /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_ConvBelt_MASK.png     /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_PLeft_MASK.png     /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_PRight_MASK.png   --threshold_dir /home/unito/advis/advis_distrimuse_unito_SR/scripts/results/thresholds   --checkpoints /home/unito/advis/advis_distrimuse_unito_SR/scripts/results/models_v2   --latent_dims 64   --frame_stride 1   --verbose_level 1   --log_every_n 10   --process_period 0.02   --show_timeline --show_model_input
+    ```
+3. Run Detection in 3rd terminal 
+    ```bash
+    cd ~/advis/distrimuse-image-broadcaster
+    source /home/unito/advis/distrimuse-ros2-api/install/setup.bash
+    pixi run ros2 topic echo /rulex/detection_result
+    ```
+---
+
+
+
+
+
+1. Broadcast Sensor (RGB Camera)
+
+- **Open Terminal `T1`:**
+```bash
+ssh -X unito@distrimuse
+
+cd ~/advis/distrimuse-image-broadcaster/
+pixi run replay /home/unito/advis/bags/recording_20260313_133316/ --no-display --loop
+```
+
+**`Verify Broadcast`**
+- Open New Terminal to Another terminal `T2`
+```bash
+ssh -X unito@distrimuse
+
+cd ~/advis/distrimuse-image-broadcaster/
+pixi run ros2 topic list | grep camera
+```
+
+-----------------------------------------------------
+Perform Detection `T3`:
+
+```bash
+ssh -X unito@distrimuse
+cd ~/advis/advis_distrimuse_unito_SR
+
+pixi run python /home/unito/advis/test/simple_infer_ros.py   --camera_topic /camera/back_view/image_raw   --rulex_topic /rulex/detection_result   --area_names RoboArm ConvBelt PLeft PRight   --mode toggle
+
+```
+------------------------------------
+Open New Terminal `T4`: 
+```bash
+ssh -X unito@distrimuse
+cd ~/advis/distrimuse-image-broadcaster/
+
+```
+**Receive Detection Scores**
+
+source /home/unito/advis/distrimuse-ros2-api/install/setup.bash
+pixi run ros2 topic echo /rulex/detection_result
+
+
+# Repository Structure
+
+```text
+advis_distrimuse_unito_SR/
+│
+├── scripts/
+│   ├── train.py
+│   ├── calibrate_threshold.py
+│   ├── inference.py
+│   ├── infer_ros_live.py
+│   └── results/
+│       ├── models/
+│       ├── thresholds/
+│       └── training/
+│
+├── pixi.toml
+└── README.md
+```
+
+---
+
+
+
+# Acknowledgements
+
+Developed at the **University of Torino** under the  
+**DistriMuSe Project**:
+
+https://distrimuse.eu/
+
+Focused on distributed multi-sensor systems for:
+
+- Human safety  
+- Collaborative robotics  
+- Industrial anomaly detection  
+
+---
