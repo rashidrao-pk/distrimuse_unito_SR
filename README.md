@@ -188,7 +188,6 @@ pixi run ros2 topic hz /camera/back_view/image_raw
 
 **CHECK THE FULL DETAILS OF RECEIVED MESSAGE**
 
-
 ```bash
 export ROS_DOMAIN_ID=1
 pixi run ros2 topic info /camera/back_view/image_raw -v
@@ -398,7 +397,6 @@ pixi run python scripts/infer_ros_live_GUI_v4.py \
   --verbose_level 1 \
   --log_every_n 10 \
   --process_period 0.02 \
-  --rulex_topic /rulex/detection_result \
   --show_timeline \
   --show_model_input
 ```
@@ -411,7 +409,7 @@ source /home/unito/advis/distrimuse-ros2-api/install/setup.bash
 
 pixi run python scripts/infer_ros_live_GUI_v4.py \
   --camera_topic /camera/back_view/image_raw \
-  --rulex_topic /rulex/detection_result \
+  
   --publish_rulex \
   --area_names PLeft PRight RoboArm ConvBelt \
   --static_mask_paths <mask_pleft> <mask_pright> <mask_roboarm> <mask_convbelt> \
@@ -433,15 +431,14 @@ pixi run python scripts/infer_ros_live_GUI_v4.py \
 
 ```bash
 pixi run python scripts/infer_ros_live_MSG.py \
-  --publish_rulex \
-  --rulex_topic /rulex/detection_result
+  --publish_rulex
 ```
 
 ### 8.2 Verify published messages
 
 ```bash
 source /home/unito/advis/distrimuse-ros2-api/install/setup.bash
-pixi run ros2 topic echo /rulex/detection_result
+pixi run ros2 topic echo /rulex/data
 ```
 
 </details>
@@ -478,13 +475,13 @@ source /home/unito/advis/distrimuse-ros2-api/install/setup.bash
 
 pixi run python /home/unito/advis/test/simple_infer_ros.py \
   --camera_topic /camera/back_view/image_raw \
-  --rulex_topic /rulex/detection_result \
+  
   --area_names RoboArm ConvBelt PLeft PRight \
   --mode toggle
 ```
 
 ```bash
-pixi run 'ROS_DOMAIN_ID=1 python /home/unito/advis/test/simple_infer_ros.py --camera_topic /camera/back_view/image_raw --rulex_topic /rulex/detection_result --area_names RoboArm ConvBelt PLeft PRight --mode toggle'
+pixi run 'ROS_DOMAIN_ID=1 python /home/unito/advis/test/simple_infer_ros.py --camera_topic /camera/back_view/image_raw --rulex_topic /rulex/data --area_names RoboArm ConvBelt PLeft PRight --mode toggle'
 ```
 
 #### Verify detection results
@@ -493,7 +490,7 @@ pixi run 'ROS_DOMAIN_ID=1 python /home/unito/advis/test/simple_infer_ros.py --ca
 ssh -X unito@distrimuse
 cd ~/advis/distrimuse-image-broadcaster
 source /home/unito/advis/distrimuse-ros2-api/install/setup.bash
-pixi run ros2 topic echo /rulex/detection_result
+pixi run ros2 topic echo /rulex/data
 ```
 
 </details>
@@ -526,18 +523,16 @@ pixi run python scripts/infer_ros_live_GUI_v4.py \
     /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_PLeft_MASK.png \
     /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_PRight_MASK.png \
   --threshold_dir /home/unito/advis/advis_distrimuse_unito_SR/scripts/results/thresholds \
-  --checkpoints /home/unito/advis/advis_distrimuse_unito_SR/scripts/results/models_v2 \
+  --checkpoints /home/unito/advis/advis_distrimuse_unito_SR/scripts/dm_checkpoints_demo33/checkpoints_33 \
   --latent_dims 64 \
   --frame_stride 1 \
   --verbose_level 1 \
   --log_every_n 10 \
   --process_period 0.02 \
-  --model_variant new \
+  --model_variant old \
   --publish_rulex \
-  --rulex_topic /rulex/detection_result \
-  --show_timeline \
-  --show_model_input
-
+  --show_model_input \
+  --show_timeline
 
 #---------
 
@@ -559,7 +554,52 @@ pixi run python scripts/infer_ros_live_GUI_v4.py \
   --process_period 0.02 \
   --model_variant new \
   --publish_rulex \
-  --rulex_topic /rulex/detection_result
+  --rulex_topic /rulex/data
+
+
+
+pixi run python scripts/infer_ros_live_GUI_v4.py \
+  --camera_topic /camera/back_view/image_raw \
+  --safety_area ALL \
+  --area_names RoboArm ConvBelt PLeft PRight \
+  --static_mask_paths \
+    /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_RoboArm_MASK.png \
+    /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_ConvBelt_MASK.png \
+    /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_PLeft_MASK.png \
+    /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_PRight_MASK.png \
+  --threshold_dir /home/unito/advis/advis_distrimuse_unito_SR/scripts/results/thresholds \
+  --checkpoints /home/unito/advis/advis_distrimuse_unito_SR/scripts/dm_checkpoints_demo33/checkpoints_33 \
+  --latent_dims 64 \
+  --frame_stride 1 \
+  --verbose_level 1 \
+  --log_every_n 10 \
+  --process_period 0.02 \
+  --publish_rulex \
+  --show_model_input \
+  --model_input_width 800 \
+  --model_input_height 500
+
+
+
+
+pixi run python scripts/infer_ros_live_GUI_v4.py \
+  --camera_topic /camera/front_view/image_raw \
+  --safety_area ALL \
+  --area_names RoboArm ConvBelt PLeft PRight \
+  --static_mask_paths \
+    /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_RoboArm_MASK.png \
+    /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_ConvBelt_MASK.png \
+    /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_PLeft_MASK.png \
+    /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_PRight_MASK.png \
+  --threshold_dir /home/unito/advis/advis_distrimuse_unito_SR/scripts/results/thresholds \
+  --checkpoints /home/unito/advis/advis_distrimuse_unito_SR/scripts/dm_checkpoints_demo33/checkpoints_33 \
+  --latent_dims 64 \
+  --frame_stride 1 \
+  --verbose_level 1 \
+  --log_every_n 10 \
+  --process_period 0.02 \
+  --publish_rulex \
+  --show_model_input
 ```
 
 #### Step 3 — Monitor detection results in terminal 3
@@ -567,7 +607,7 @@ pixi run python scripts/infer_ros_live_GUI_v4.py \
 ```bash
 cd ~/advis/distrimuse-image-broadcaster
 source /home/unito/advis/distrimuse-ros2-api/install/setup.bash
-pixi run ros2 topic echo /rulex/detection_result
+pixi run ros2 topic echo /rulex/data
 ```
 
 </details>
@@ -603,7 +643,6 @@ cd ~/advis/advis_distrimuse_unito_SR
 
 pixi run python /home/unito/advis/test/simple_infer_ros.py \
   --camera_topic /camera/back_view/image_raw \
-  --rulex_topic /rulex/detection_result \
   --area_names RoboArm ConvBelt PLeft PRight \
   --mode toggle
 ```
@@ -614,7 +653,7 @@ pixi run python /home/unito/advis/test/simple_infer_ros.py \
 ssh -X unito@distrimuse
 cd ~/advis/distrimuse-image-broadcaster/
 source /home/unito/advis/distrimuse-ros2-api/install/setup.bash
-pixi run ros2 topic echo /rulex/detection_result
+pixi run ros2 topic echo /rulex/data
 ```
 
 </details>
@@ -651,7 +690,7 @@ pixi run 'ROS_DOMAIN_ID=1 ros2 topic list | grep camera'
 pixi run 'ROS_DOMAIN_ID=1 ros2 topic hz /camera/back_view/image_raw'
 
 
-pixi run 'ROS_DOMAIN_ID=1 python scripts/infer_ros_live_GUI_v4.py --camera_topic /camera/back_view/image_raw --safety_area ALL --area_names RoboArm ConvBelt PLeft PRight --static_mask_paths /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_RoboArm_MASK.png /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_ConvBelt_MASK.png /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_PLeft_MASK.png /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_PRight_MASK.png --threshold_dir /home/unito/advis/advis_distrimuse_unito_SR/scripts/results/thresholds --checkpoints /home/unito/advis/advis_distrimuse_unito_SR/scripts/results/models_v2 --latent_dims 64 --frame_stride 1 --verbose_level 1 --log_every_n 10 --process_period 0.02 --rulex_topic /rulex/detection_result'
+pixi run 'ROS_DOMAIN_ID=1 python scripts/infer_ros_live_GUI_v4.py --camera_topic /camera/back_view/image_raw --safety_area ALL --area_names RoboArm ConvBelt PLeft PRight --static_mask_paths /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_RoboArm_MASK.png /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_ConvBelt_MASK.png /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_PLeft_MASK.png /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_PRight_MASK.png --threshold_dir /home/unito/advis/advis_distrimuse_unito_SR/scripts/results/thresholds --checkpoints /home/unito/advis/advis_distrimuse_unito_SR/scripts/results/models_v2 --latent_dims 64 --frame_stride 1 --verbose_level 1 --log_every_n 10 --process_period 0.02 --rulex_topic /rulex/data'
 
 ```
 ## Notes

@@ -47,3 +47,4 @@ ros-kilted-rosbag2-storage-mcap = "*"
 ros-kilted-ros-base = "*"
 
 ros-kilted-rmw-cyclonedds-cpp = "*"
+opencv = ">=4.12.0,<5"

@@ -101,6 +101,9 @@ def resize_and_center(image, target_w, target_h, bg_color=(0, 0, 0)):
     new_w = max(1, int(round(w * scale)))
     new_h = max(1, int(round(h * scale)))
 
+    # print('DEBUGG ----', scale, new_w, new_h)
+    # print('-'*100)
+
     resized = cv2.resize(image, (new_w, new_h), interpolation=cv2.INTER_AREA)
     canvas = np.full((target_h, target_w, 3), bg_color, dtype=np.uint8)
 
@@ -356,13 +359,15 @@ def draw_dashboard_panel(frame_bgr, area_inputs, latest_results, frame_id=None, 
         color = (0, 0, 255) if is_anom else (255, 255, 255)
 
         scaled = scale_contours(contours, scale, x_off, y_off)
+
         if len(scaled) > 0:
             cv2.drawContours(canvas, scaled, -1, color, 2)
             pt = scaled[0][0][0]
             label = f"{AREA_DISPLAY_NAMES.get(area_name, area_name)}: {rr.get('norm_score', 0):.2f}" if "norm_score" in rr else area_name
             cv2.putText(canvas, label, (int(pt[0]), max(20, int(pt[1]) - 8)),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2, cv2.LINE_AA)
-
+    # print('SCALED ----', scaled)
+    # print('-'*100)
     # ------------------------------------------------------------------
     # Build full-frame anomaly/reconstruction
     # ------------------------------------------------------------------
@@ -1115,17 +1120,22 @@ class LiveRosAnomalyInfer(Node):
                 self.publish_rulex_result(results, frame_bgr, corr_frame_id, corr_stamp)
 
             if self.args.show_model_input:
+
+                # print('DRAWING DASHBOARD with', self.args.model_input_width,'x', self.args.model_input_height)
                 dashboard = draw_dashboard_panel(
                     frame_bgr,
                     area_inputs,
                     self.latest_results,
                     frame_id=msg_id,
-                    width=self.args.model_input_width,
-                    height=self.args.model_input_height,
+                    # width=self.args.model_input_width,
+                    # height=self.args.model_input_height,
                     corr_frame_id=corr_frame_id,
                     corr_stamp=corr_stamp
                 )
+                dashboard = cv2.resize(dashboard, (self.args.model_input_width, self.args.model_input_height))
                 cv2.imshow("ADVIS Dashboard", dashboard)
+                # cv2.resizeWindow("ADVIS Dashboard", 1000, 500)
+
                 key = cv2.waitKey(1) & 0xFF
                 if key == 27:
                     self.vlog(1, "[gui] ESC pressed, shutting down")
@@ -1141,6 +1151,8 @@ class LiveRosAnomalyInfer(Node):
                     max_points=self.timeline_history_len,
                 )
                 cv2.imshow("ADVIS Timeline", panel)
+
+
                 key = cv2.waitKey(1) & 0xFF
                 if key == 27:
                     self.vlog(1, "[gui] ESC pressed, shutting down")
