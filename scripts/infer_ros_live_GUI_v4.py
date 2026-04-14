@@ -782,7 +782,8 @@ class LiveRosAnomalyInfer(Node):
         )
 
         sensor_qos = QoSProfile(
-            reliability=ReliabilityPolicy.RELIABLE,
+            # reliability=ReliabilityPolicy.RELIABLE,
+            reliability=ReliabilityPolicy.BEST_EFFORT,
             history=HistoryPolicy.KEEP_LAST,
             depth=1,
         )
@@ -794,6 +795,8 @@ class LiveRosAnomalyInfer(Node):
             sensor_qos,
         )
 
+        print('self.subscription --> ', self.subscription)
+
         self.rulex_pub = None
         if args.publish_rulex:
             self.rulex_pub = self.create_publisher(
@@ -802,8 +805,6 @@ class LiveRosAnomalyInfer(Node):
                 10,
             )
             self.vlog(1, f"[publisher] publishing RulexDetectionResult to {args.rulex_topic}")
-
-            print('='*100)
             print('='*100)
 
         self.frame_count = 0
@@ -837,7 +838,9 @@ class LiveRosAnomalyInfer(Node):
         self.process_timer = self.create_timer(args.process_period, self.process_latest_frame)
 
         self.vlog(1, f"[subscriber] subscribed to {args.camera_topic}")
+        print('-'*100)
         self.vlog(1, f"[subscriber] frame_stride={self.args.frame_stride}")
+        print('-'*100)
         self.vlog(1, f"[subscriber] max_frames={self.max_frames}")
         self.vlog(1, f"[subscriber] process_period={self.args.process_period}s")
 
@@ -980,7 +983,9 @@ class LiveRosAnomalyInfer(Node):
             msg.image = self.bridge.cv2_to_imgmsg(frame_bgr, encoding="bgr8")
 
         if not self.first_rulex_publish_done:
+            print('-'*100)
             print(f"[publish] FIRST RulexDetectionResult publish started for frame_id={corr_frame_id} at stamp={corr_stamp.sec}.{corr_stamp.nanosec}")
+            print('-'*100)
             self.first_rulex_publish_done = True
 
         self.rulex_pub.publish(msg)
