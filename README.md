@@ -701,6 +701,8 @@ advis_distrimuse_unito_SR/
 ```bash
 
 ## RUN V-LAN from SAFRAN
+ssh unito@distrimuse.idrago.org -p10022
+ssh -X unito@distrimuse.idrago.org -p10022
 
 cd dm/distrimuse-seds/
 source setup_ros.sh vlans.conf unito/dm kilted
@@ -722,6 +724,7 @@ cd ~/advis/advis_distrimuse_unito_SR
 pixi run 'ROS_DOMAIN_ID=1 python scripts/infer_ros_live_GUI_v4.py --camera_topic /camera/back_view/image_raw --safety_area ALL --area_names RoboArm ConvBelt PLeft PRight --static_mask_paths /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_RoboArm_MASK.png /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_ConvBelt_MASK.png /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_PLeft_MASK.png /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_PRight_MASK.png --threshold_dir /home/unito/advis/advis_distrimuse_unito_SR/scripts/results/thresholds --checkpoints /home/unito/advis/advis_distrimuse_unito_SR/scripts/results/models_v2 --latent_dims 64 --frame_stride 1 --verbose_level 1 --log_every_n 10 --process_period 0.02 --rulex_topic /rulex/data'
 
 
+cd ~/advis/advis_distrimuse_unito_SR
 
 pixi run python scripts/infer_ros_live_GUI_v4.py \
   --camera_topic /camera/front_view/image_raw \
@@ -753,6 +756,8 @@ pixi run python scripts/infer_ros_live_GUI_v4.py \
 
 ```bash
 ## RUN INFERENCE
+cd ~/advis/advis_distrimuse_unito_SR
+
 ROS_DOMAIN_ID=1 pixi run python scripts/infer_ros_live_GUI_v5.py \
   --camera_topic /camera/back_view/image_raw \
   --rulex_topic /rulex/detection_result \
@@ -772,6 +777,20 @@ ROS_DOMAIN_ID=1 pixi run python scripts/infer_ros_live_GUI_v5.py \
 ## LISTEN:
 ROS_DOMAIN_ID=1 ros2 topic list
 ROS_DOMAIN_ID=1 rqt_image_view
+
+
+### 15th April 
+
+
+# CHECK ROS MESSAGES
+pixi run ros2 topic hz /camera/back_view/image_raw
+pixi run ros2 topic info /camera/back_view/image_raw
+
+
+pixi run python scripts/scripts_extra/save_one_frame.py \
+  --camera_topic /camera/back_view/image_raw \
+  --use_compressed \
+  --output_path /home/unito/advis/back_frame.jpg
 
 ```
 ---

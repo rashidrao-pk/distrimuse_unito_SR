@@ -5,9 +5,10 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/zenohd \
-	-c /home/unito/advis/advis_distrimuse_unito_SR/zenoh/zenoh.json5 \ 
-	--rest-http-port none
+User=zenoh
+Group=zenoh
+Environment=ZENOHD_CONFIG=/etc/zenoh/zenohd.json5
+ExecStart=/usr/bin/zenohd -c ${ZENOHD_CONFIG} --rest-http-port none
 Restart=always
 RestartSec=3
 
