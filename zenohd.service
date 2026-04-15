@@ -1,0 +1,21 @@
+[Unit]
+Description=Zenoh Router
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/zenohd \
+	-c /home/unito/advis/advis_distrimuse_unito_SR/zenoh/zenoh.json5 \ 
+	--rest-http-port none
+Restart=always
+RestartSec=3
+
+# Optional hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target

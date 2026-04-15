@@ -1,0 +1,19 @@
+[Unit]
+Description=Autossh
+Wants=network-online.target
+After=network-online.target
+StartLimitIntervalSec=0
+
+[Service]
+ExecStart=/usr/bin/autossh -M 0 -N \
+	-o "ServerAliveInterval 15" -o "ServerAliveCountMax 3" \
+	-o "ConnectTimeout 10" -o "ExitOnForwardFailure yes" \
+	-i /home/unito/.ssh/id_ed25519 \
+	distrimuse@distrimuse.idrago.org \
+	-R 0.0.0.0:10022:localhost:22 \
+	-R 0.0.0.0:7447:localhost:7447
+Restart=always
+RestartSec=1
+
+[Install]
+WantedBy=multi-user.target

@@ -1,7 +1,25 @@
 # DistriMuSe-UC3
 
-> **University of Torino**  
-> **DistriMuSe Project** — Distributed Multi-Sensor Systems for Human Safety and Health
+
+<p align="center">
+  <img src="https://readme-typing-svg.herokuapp.com?color=00E5C3&lines=Real-Time+Anomaly+Detection+for+Safe+Human-Robot+Interaction;ROS2+%7C+VAE-GAN+%7C+Industrial+Safety+Monitoring;Safety-Area+Inference+%7C+Thresholding+%7C+Alert+Publishing;University+of+Torino+%7C+DistriMuSe+Project&center=true&width=900&height=45">
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Project-DistriMuSe-0A192F?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/Use%20Case-UC3-00E5C3?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/Framework-ROS2-1f6feb?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/Model-VAE--GAN-7A3EFF?style=for-the-badge" />
+</p>
+
+<p align="center">
+  <strong>University of Torino</strong> · <strong>DistriMuSe Project</strong><br>
+  Distributed Multi-Sensor Systems for Human Safety and Health
+</p>
+
+<p align="center">
+  Real-time anomaly detection pipeline for collaborative robotics safety monitoring using <strong>VAE / VAE-GAN</strong>, <strong>ROS2</strong>, and <strong>Rulex-compatible messaging</strong>.
+</p>
 
 ---
 
@@ -575,9 +593,7 @@ pixi run python scripts/infer_ros_live_GUI_v4.py \
   --log_every_n 10 \
   --process_period 0.02 \
   --publish_rulex \
-  --show_model_input \
-  --model_input_width 800 \
-  --model_input_height 500
+  --show_model_input
 
 
 
@@ -683,14 +699,48 @@ advis_distrimuse_unito_SR/
 
 ## Demo Week
 ```bash
+
+## RUN V-LAN from SAFRAN
+
+cd dm/distrimuse-seds/
+source setup_ros.sh vlans.conf unito/dm kilted
+./vlan_manager.sh vlans.conf
+
 ## CHECK CAMERAS
+cd ~/advis/distrimuse-image-broadcaster/
+pixi run ros2 topic list | grep camera
+
 pixi run 'ROS_DOMAIN_ID=1 ros2 topic list | grep camera'
+
 
 ## CHECK IMAGES
 pixi run 'ROS_DOMAIN_ID=1 ros2 topic hz /camera/back_view/image_raw'
-
+source /home/unito/advis/distrimuse-ros2-api/install/setup.bash
+export ROS_DOMAIN_ID=1
+cd ~/advis/advis_distrimuse_unito_SR
 
 pixi run 'ROS_DOMAIN_ID=1 python scripts/infer_ros_live_GUI_v4.py --camera_topic /camera/back_view/image_raw --safety_area ALL --area_names RoboArm ConvBelt PLeft PRight --static_mask_paths /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_RoboArm_MASK.png /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_ConvBelt_MASK.png /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_PLeft_MASK.png /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_PRight_MASK.png --threshold_dir /home/unito/advis/advis_distrimuse_unito_SR/scripts/results/thresholds --checkpoints /home/unito/advis/advis_distrimuse_unito_SR/scripts/results/models_v2 --latent_dims 64 --frame_stride 1 --verbose_level 1 --log_every_n 10 --process_period 0.02 --rulex_topic /rulex/data'
+
+
+
+pixi run python scripts/infer_ros_live_GUI_v4.py \
+  --camera_topic /camera/front_view/image_raw \
+  --safety_area ALL \
+  --area_names RoboArm ConvBelt PLeft PRight \
+  --static_mask_paths \
+    /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_RoboArm_MASK.png \
+    /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_ConvBelt_MASK.png \
+    /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_PLeft_MASK.png \
+    /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_PRight_MASK.png \
+  --threshold_dir /home/unito/advis/advis_distrimuse_unito_SR/scripts/results/thresholds \
+  --checkpoints /home/unito/advis/advis_distrimuse_unito_SR/scripts/dm_checkpoints_demo33/checkpoints_33 \
+  --latent_dims 64 \
+  --frame_stride 1 \
+  --verbose_level 1 \
+  --log_every_n 10 \
+  --process_period 0.02 \
+  --publish_rulex \
+  --show_model_input
 
 ```
 ## Notes
@@ -700,6 +750,30 @@ pixi run 'ROS_DOMAIN_ID=1 python scripts/infer_ros_live_GUI_v4.py --camera_topic
 - Use the message publisher scripts when integrating with Rulex.
 - The `v2` and `v3` datasets may use different mask, checkpoint, and threshold paths.
 
+
+```bash
+## RUN INFERENCE
+ROS_DOMAIN_ID=1 pixi run python scripts/infer_ros_live_GUI_v5.py \
+  --camera_topic /camera/back_view/image_raw \
+  --rulex_topic /rulex/detection_result \
+  --publish_rulex \
+  --publish_anomaly_map \
+  --publish_dashboard \
+  --publish_timeline \
+  --area_names PLeft PRight RoboArm ConvBelt \
+  --static_mask_paths \
+    /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_PLeft_MASK.png \
+    /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_PRight_MASK.png \
+    /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_RoboArm_MASK.png \
+    /home/unito/advis/DS/SR/v3/masks/Mask\ Generation_ConvBelt_MASK.png \
+  --threshold_dir /your/threshold_dir
+
+
+## LISTEN:
+ROS_DOMAIN_ID=1 ros2 topic list
+ROS_DOMAIN_ID=1 rqt_image_view
+
+```
 ---
 
 ## Acknowledgements

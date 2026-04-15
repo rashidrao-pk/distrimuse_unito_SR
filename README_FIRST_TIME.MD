@@ -1531,3 +1531,75 @@ Focused on distributed multi-sensor systems for:
 - Industrial anomaly detection  
 
 ---
+
+
+
+
+
+## TODO:
+
+1. Create auto service for safran
+
+    ```bash
+    sudo nano /etc/systemd/system/vlan_manager.service
+    ```
+
+    ```text
+    [Unit]
+    Description=VLAN Manager Startup Script
+    After=network.target
+
+    [Service]
+    Type=simple
+    User=unito
+    WorkingDirectory=/home/unito/dm/distrimuse-seds
+
+    ExecStart=/bin/bash -c '
+    source /home/unito/dm/distrimuse-seds/setup_ros.sh vlans.conf unito/dm kilted && \
+    ./vlan_manager.sh vlans.conf
+    '
+
+    Restart=always
+    RestartSec=5
+
+    [Install]
+    WantedBy=multi-user.target
+    ```
+    
+    ```bash
+    sudo systemctl daemon-reexec
+    sudo systemctl daemon-reload
+    ```
+    - Enable Service - Run at boot
+
+    ```bash
+    sudo systemctl enable vlan_manager.service
+    ```
+
+    ```bash
+    # START IMMEDIATELY FOR TETING
+    sudo systemctl start vlan_manager.service
+    ```
+
+    ```bash
+    # CHECK LOGS
+    journalctl -u vlan_manager.service -f
+    ```
+
+
+
+
+
+```bash
+## SET ROS_DOMAIN_ID=1 permanently
+nano ~/.bashrc
+## ADD THIS AT THE END
+export ROS_DOMAIN_ID=1
+# apply
+source ~/.bashrc
+
+# alternatively
+sudo nano /etc/environment
+ROS_DOMAIN_ID=1
+source /etc/environment
+```
