@@ -1,5 +1,5 @@
 torch
-torch-vision
+torchvision
 pandas
 matplotlib
 seaborn

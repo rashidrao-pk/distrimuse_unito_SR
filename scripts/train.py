@@ -242,6 +242,27 @@ def get_data_loaders_from_preprocessed_with_saved_split(
     return train_loader, val_loader, train_dataset, val_dataset, split_info
 
 
+def format_timedelta_human(td):
+    total_seconds = int(td.total_seconds())
+    if total_seconds < 0:
+        total_seconds = 0
+
+    days, rem = divmod(total_seconds, 86400)
+    hours, rem = divmod(rem, 3600)
+    minutes, seconds = divmod(rem, 60)
+
+    parts = []
+    if days > 0:
+        parts.append(f"{days}d")
+    if hours > 0:
+        parts.append(f"{hours}h")
+    if minutes > 0:
+        parts.append(f"{minutes}m")
+    if seconds > 0 or not parts:
+        parts.append(f"{seconds}s")
+
+    return " ".join(parts)
+
 # ---------------------------------------------------------------------------
 # Training loop
 # ---------------------------------------------------------------------------
@@ -275,7 +296,7 @@ def train(
 
     start_time  = datetime.now()
     log_messages = ut.create_log_file(params, paths, start_time, verbose=True and args.verbose_level > 0)
-
+    epoch_time_estimate_printed = False
     iterator = tqdm(
         range(params.epochs),
         initial     = len(loss_history),
@@ -286,7 +307,7 @@ def train(
     )
 
     for iter_num_id, iter_num in enumerate(iterator):
-
+        epoch_start_time = datetime.now()
         # ── early-timing estimate after first batch ──────────────────────────
         if iter_num_id == 1:
             pending_epochs    = params.epochs - len(loss_history)
@@ -435,14 +456,27 @@ def train(
                     verbose=True and args.verbose_level > 1)
 
         # ── ETA after first real epoch ───────────────────────────────────────
-        if iter_num_id == 1:
-            end_time_first = datetime.now()
-            eta = (end_time_first - start_time_first) * pending_epochs
-            if args.verbose_level > 1:
-                print(
-                f"[timing] 1 epoch = {end_time_first - start_time_first} "
-                f"→ {pending_epochs} remaining epochs ≈ {eta}"
-                )
+                # ── ETA after first completed epoch ───────────────────────────────
+        epoch_end_time = datetime.now()
+        epoch_duration = epoch_end_time - epoch_start_time
+
+        if args.estimate_time and not epoch_time_estimate_printed:
+            completed_epochs = len(loss_history)
+            remaining_epochs = max(params.epochs - completed_epochs, 0)
+            total_epochs_target = params.epochs
+
+            estimated_remaining = epoch_duration * remaining_epochs
+            estimated_total = epoch_duration * total_epochs_target
+
+            timing_msg = (
+                f"[timing] 1 epoch took {format_timedelta_human(epoch_duration)} "
+                f"| {remaining_epochs} remaining epochs might take {format_timedelta_human(estimated_remaining)} "
+                f"| {total_epochs_target} total epochs might take {format_timedelta_human(estimated_total)}"
+            )
+
+            print(timing_msg)
+            log_messages += timing_msg + "\n"
+            epoch_time_estimate_printed = True
 
         # ── Console log ──────────────────────────────────────────────────────
         table_msg = (
@@ -504,6 +538,7 @@ def parse_args():
                    help="Save reconstruction & tracking figures during training. "
                         "When disabled only loss curves (results/training) and model "
                         "checkpoints (results/models) are written.")
+    p.add_argument("--estimate_time",action="store_true",help="Estimate training time after the first completed epoch.")
     return p.parse_args()
 
 def train_one_safety_area(safety_area: str, args, device):

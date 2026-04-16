@@ -1,0 +1,2 @@
+safety_area,mode,suffix,epochs_trained,threshold,threshold_strategy,offset,sigma,quantile,score_max,score_mean,score_std,score_p99,n_images,score_csv,computed_at
+RoboArm,val,RoboArm_64,2,0.9004760384559631,max,1,0.5,1.0,0.9004760384559631,0.8996053697704931,0.0005120254776705908,0.9002845978736878,353,/home/unito/advis/advis_distrimuse_unito_SR/scripts/results/thresholds_v4/RoboArm/val_scores_RoboArm_off1_sig0.5_q1.0.csv,2026-04-16T15:08:06

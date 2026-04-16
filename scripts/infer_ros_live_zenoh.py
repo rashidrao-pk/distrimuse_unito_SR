@@ -412,8 +412,13 @@ def pack_dashboard_state(*, msg_id, corr_frame_id, corr_stamp, frame_bgr, area_i
 
     for area in ordered_area_list(area_inputs.keys()):
         info = area_inputs[area]
+        if info.get("bbox") is not None:
+            bbox = [int(x) for x in info["bbox"]]
+            # print(f'\n\n\n{info["bbox"]}  {bbox}')
+        else:
+            bbox = None
         payload["area_inputs"][area] = {
-            "bbox": list(info["bbox"]) if info.get("bbox") is not None else None,
+            "bbox": bbox,
             "resize_meta": info.get("resize_meta"),
             "mask_png": encode_image(info["mask_bin"], ".png"),
             "orig_patch_jpg": encode_image(info["orig_patch_bgr"], ".jpg", [int(cv2.IMWRITE_JPEG_QUALITY), int(jpeg_quality)]),
@@ -421,6 +426,8 @@ def pack_dashboard_state(*, msg_id, corr_frame_id, corr_stamp, frame_bgr, area_i
             "anom_patch_jpg": encode_image(info["anom_patch_bgr"], ".jpg", [int(cv2.IMWRITE_JPEG_QUALITY), int(jpeg_quality)]),
         }
 
+    # print(payload["area_inputs"])
+    # print('pat --------', payload)
     return msgpack.packb(payload, use_bin_type=True)
 
 
@@ -466,7 +473,12 @@ class LiveRosAnomalyInfer(Node):
             self.vlog(1, f"[startup] cuda current device={torch.cuda.current_device()}")
             self.vlog(1, f"[startup] cuda device name={torch.cuda.get_device_name(torch.cuda.current_device())}")
 
-        self.areas = ALL_SAFETY_AREAS if args.safety_area.upper() == "ALL" else ordered_area_list([args.safety_area])
+        # self.areas = ALL_SAFETY_AREAS if args.safety_area.upper() == "ALL" else ordered_area_list([args.safety_area])
+        if len(args.safety_area) == 1 and args.safety_area[0].upper() == "ALL":
+            self.areas = ALL_SAFETY_AREAS
+        else:
+            self.areas = ordered_area_list(args.safety_area)
+        
         self.vlog(1, f"[startup] active areas={self.areas}")
 
         self.vlog(1, "[startup] loading models and thresholds...")
@@ -804,6 +816,7 @@ class LiveRosAnomalyInfer(Node):
                 out["bbox"] = bbox
                 results[area] = out
 
+                # print('OUT -----', out)
                 self.score_history[area].append(float(out["norm_score"]))
                 self.latest_results[area] = out
 
@@ -868,6 +881,7 @@ class LiveRosAnomalyInfer(Node):
         except Exception as e:
             print(f"[process] error processing frame #{msg_id}: {e}")
             self.get_logger().error(f"[process-error] {e}")
+            raise e
         finally:
             self.is_processing = False
 
@@ -877,12 +891,14 @@ def parse_args():
 
     p.add_argument("--camera_topic", default="/camera/back_view/image_raw")
     p.add_argument("--rulex_topic", default="/rulex/data")
-    p.add_argument("--publish_rulex", action="store_true", default=True,
+    p.add_argument("--publish_rulex", action="store_true", default=False,
                    help="Publish RulexDetectionResult on ROS2")
     p.add_argument("--attach_image_on_anomaly", action="store_true",
                    help="Attach current frame to RulexDetectionResult if any area is anomalous")
 
-    p.add_argument("--safety_area", default="ALL")
+    # p.add_argument("--safety_area", default="ALL")
+    p.add_argument("--safety_area", nargs="+", default=["ALL"])
+
     p.add_argument("--area_names", nargs="+", default=["PLeft", "PRight", "RoboArm", "ConvBelt"])
     p.add_argument("--static_mask_paths", nargs="+", required=True)
 
@@ -905,7 +921,7 @@ def parse_args():
     p.add_argument("--log_every_n", type=int, default=1)
     p.add_argument("--process_period", type=float, default=0.05)
 
-    p.add_argument("--timeline_history", type=int, default=200)
+    p.add_argument("--timeline_history", type=int, default=500)
     p.add_argument("--zenoh-endpoint", default="tcp/127.0.0.1:7447")
     p.add_argument("--zenoh-dashboard-key", default="advis/vis/dashboard/state")
     p.add_argument("--zenoh-timeline-key", default="advis/vis/timeline/state")

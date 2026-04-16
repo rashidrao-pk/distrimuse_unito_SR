@@ -1,0 +1,18 @@
+{
+  "safety_area": "RoboArm",
+  "mode": "val",
+  "suffix": "RoboArm_64",
+  "epochs_trained": 2,
+  "threshold": 0.9004760384559631,
+  "threshold_strategy": "max",
+  "offset": 1,
+  "sigma": 0.5,
+  "quantile": 1.0,
+  "score_max": 0.9004760384559631,
+  "score_mean": 0.8996053697704931,
+  "score_std": 0.0005120254776705908,
+  "score_p99": 0.9002845978736878,
+  "n_images": 353,
+  "score_csv": "/home/unito/advis/advis_distrimuse_unito_SR/scripts/results/thresholds_v4/RoboArm/val_scores_RoboArm_off1_sig0.5_q1.0.csv",
+  "computed_at": "2026-04-16T15:08:06"
+}

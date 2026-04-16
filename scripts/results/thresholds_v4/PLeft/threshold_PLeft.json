@@ -1,0 +1,18 @@
+{
+  "safety_area": "PLeft",
+  "mode": "val",
+  "suffix": "PLeft_64",
+  "epochs_trained": 2,
+  "threshold": 0.55,
+  "threshold_strategy": "max",
+  "offset": 1,
+  "sigma": 0.5,
+  "quantile": 1.0,
+  "score_max": 0.9137406349182129,
+  "score_mean": 0.9125812082385206,
+  "score_std": 0.0003014145032353893,
+  "score_p99": 0.9132727789878845,
+  "n_images": 353,
+  "score_csv": "/home/unito/advis/advis_distrimuse_unito_SR/scripts/results/thresholds_v4/PLeft/val_scores_PLeft_off1_sig0.5_q1.0.csv",
+  "computed_at": "2026-04-16T14:23:42"
+}

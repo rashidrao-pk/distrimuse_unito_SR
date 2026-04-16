@@ -19,7 +19,7 @@ import matplotlib.patches as patches
 from matplotlib.colors import LinearSegmentedColormap, ListedColormap
 from matplotlib.patches import Patch
 from mpl_toolkits.mplot3d import Axes3D
-import plotly.graph_objects as go
+
 
 # Image Processing
 import cv2
@@ -2807,7 +2807,7 @@ def plot_latent_3d_plotly_custom(
         labels=['train','Val'],
         title="Latent Space (Train + Test)"
     ):
-
+    import plotly.graph_objects as go
     fig = go.Figure()
 
     # -------------------------

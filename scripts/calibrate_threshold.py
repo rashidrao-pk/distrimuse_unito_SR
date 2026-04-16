@@ -756,7 +756,7 @@ def parse_args():
 
     # ── Anomaly score params (both modes) ─────────────────────────────────
     p.add_argument("--offset",   default=1,   type=int)
-    p.add_argument("--sigma",    default=1.0, type=float)
+    p.add_argument("--sigma",    default=0.5, type=float)
     p.add_argument("--quantile", default=1.0, type=float)
 
     # ── Val-mode threshold strategies ─────────────────────────────────────
@@ -805,7 +805,7 @@ def main():
     paths.path_codes_main = os.path.join(paths.path_codes, "scripts")
     paths.path_models      = os.path.join(os.getcwd(), args.checkpoints)
     out_dir = args.output_dir or os.path.join(
-        paths.path_codes_main, "results", "thresholds"
+        paths.path_codes_main, "results", f"thresholds_{args.dataset_version}"
     )
     args.test_dir = os.path.join(paths.path_datasets_main, args.test_folder)
     args.gt_csv_path = os.path.join(os.getcwd(), args.gt_csv)
